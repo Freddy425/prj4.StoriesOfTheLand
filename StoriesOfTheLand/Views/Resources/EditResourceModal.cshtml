@@ -1,0 +1,48 @@
+﻿@model StoriesOfTheLand.Models.Resource
+
+@{
+    ViewData["Title"] = "Edit Resource";
+}
+
+<div class="modal fade" id="EditResourceModal" tabindex="-1" role="dialog" aria-labelledby="resourceModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ResourceModalLabel">Edit Resource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <input type="hidden" asp-for="ResourceID" />
+            
+            <div class="modal-body">
+               <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ResourceID" />
+            <div class="form-group">
+                <label asp-for="ResourceTitle" class="control-label"></label>
+                <input asp-for="ResourceTitle" class="form-control" />
+                <span id="ResourceTitleError" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ResourceDescription" class="form-label">Resource Description:</label>
+                <textarea asp-for="ResourceDescription" class="form-control" rows="3"></textarea>
+                <span id="ResourceDescriptionError" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ResourceURL" class="control-label"></label>
+                <input asp-for="ResourceURL" class="form-control" />
+                <span id="ResourceURLError" class="text-danger"></span>
+            </div>
+            <input type="hidden" asp-for="ResourceImage" />
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

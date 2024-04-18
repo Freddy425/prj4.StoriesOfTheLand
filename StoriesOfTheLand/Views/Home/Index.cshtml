@@ -1,0 +1,181 @@
+﻿@using StoriesOfTheLand.Controllers;
+@model IEnumerable<StoriesOfTheLand.Models.Sponsor>
+
+@{
+    ViewData["Title"] = "Home";
+}
+
+@{
+    var specimens = TempData["topTen"] as List<Specimen>;
+}
+
+<!--If the user is authenthicated it will display his user name-->
+@if (User.Identity.IsAuthenticated)
+{
+    var getUser = @HomeController.GetUserOnAzureAd(User);
+    <h4 id="userWelcome"> Welcome @getUser.user_name </h4>
+}
+@if (ViewData["Success"] != null)
+{
+    <div class="alert alert-success text-center" role="alert" id="success">
+        @ViewData["Success"]
+    </div>
+}
+@* Alert box for if a success alert is present *@
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>Success!</strong> @ViewBag.SuccessMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="text-center">
+    <h1 class="display-4">Stories of the Land</h1>
+</div>
+
+
+<div class="mx-auto" style="max-width: 1000px;">
+    <div class="text-center">
+        <p>
+            Stories of the Land is a land-based learning initiative that connects the learner with the natural environment of the boreal forest.
+            Trails throughout the <a href="https://saskpolytech.ca/about/hannin-creek-education-centre/">Hannin Creek Education Centre</a>
+            feature markers with QR codes near plants of the boreal forest.
+            The QR code connects learners with identifying information about the plant including common name, Latin binomial name,
+            the Cree name and pronunciation and traditional Indigenous uses or culturally significant applications.
+        </p>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success text-center" role="alert">
+        @TempData["Success"]
+    </div>
+}
+<div>
+    <div class="text-center ">
+        <h3>Share Your Experience With Us</h3>
+    </div>
+    <div class="d-flex justify-content-center pt-5 pb-5">
+         <partial name="AddLearnerPhoto.cshtml" model="new StoriesOfTheLand.Models.AddLearnerMediaViewModel()" />
+    </div>
+</div>
+
+<div id="userImagesElement" class="text-center pb-5">
+    <h3>Photos Submitted by Learners</h3>
+    <div id="userImagesCarousel" class="carousel slide text-center mx-auto" data-bs-ride="carousel" style="max-height: 600px; max-width: 600px;" data-cy="userImageCarousel">
+        <div class="carousel-inner" id="carouselInner" data-cy="carousel-inner">
+            <p>No photos available yet.</p>
+        </div>
+    </div>
+</div>
+
+
+
+    
+@if (Model.Count() >= 1)
+{
+
+    <div id="partnerships" class="partnerships" data-bs-ride="partnerships">
+        <div class="text-center">
+            <h3>In partnership with</h3>
+            <div class="d-flex flex-wrap">
+
+                @foreach (var item in Model)
+                {
+                    <div style="width: 320px" class="mx-auto">
+                        <div style="height: 200px">
+                            <a href="@item.SponsorURL"><img src="/images/@item.SponsorImagePath" alt="@item.SponsorName" id="@item.SponsorID" style="max-width: 100%; max-height: 100%"></a>
+                        </div>
+                        <div style="height: 100px">
+                            <p>@item.SponsorName</p>
+                        </div>
+                    
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        loadUserImages();
+    });
+
+    // function to get all user images and append them onto the page
+    function loadUserImages() {
+        $.ajax({
+            url: '/Home/GetLearnerMediaList/',
+            type: 'GET',
+            success: function (data) {
+                let userImagesElement = $('#userImagesElement');
+                
+                if (data.length > 0) {
+
+                    var carousel = $('#userImagesCarousel');
+                    var carouselInner = $('#carouselInner');
+
+                    carouselInner.empty();
+
+                    data.forEach(function (image, index) {
+                        if (image.MediaPath != null) {
+                            
+                            let relPath = "" + image.MediaPath.slice(7);
+
+                            var carouselItem = $('<div class="carousel-item' + (index === 0 ? ' active' : '') + '"></div>');
+                            var imageItem = $('<img data-cy="' + relPath.slice(19) + '" src="' + relPath + '" alt="' + relPath + '" class="d-block mx-auto" style="width: 400px; height: 350px; object-fit: contain;" />'); // Adjust max-height and max-width as needed
+                            
+
+                            carouselItem.append(imageItem);
+                            carouselInner.append(carouselItem);
+                        }
+                    });
+
+                    carousel.append('<button class="carousel-control-prev btn-primary" type="button" data-bs-target="#userImagesCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Previous</span></button>');
+                    carousel.append('<button class="carousel-control-next btn-primary" type="button" data-bs-target="#userImagesCarousel" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Next</span></button>');
+
+                } else
+                {
+
+                }
+
+                
+            },
+            error: function (error) {
+                console.log(error);
+                alert('Error fetching media list');
+            }
+        });
+    }
+</script>
+
+
+<div>
+    <!--Title for the second box in the first row-->
+    <div class="text-center" id="row1Box2Title">
+        <h3>Top Viewed Specimens</h3>
+    </div>
+
+    <div class="d-flex flex-column">
+        <!-- List items will be dynamically populated here -->
+        @foreach (var specimen in specimens)
+        {
+            string linkToSpecimen = "/Specimen/Details/" + specimen.SpecimenID;
+            <div class="d-flex justify-content-center-flex justify-content-center">
+
+                <a style="text-decoration: none; color: dodgerblue;" href="@Html.Raw(linkToSpecimen)">@specimen.EnglishName</a>
+            </div>
+        }
+        <div>
+        </div>
+    </div>
+</div>
+
+           
+
+
+
+

@@ -1,0 +1,143 @@
+﻿@model IEnumerable<StoriesOfTheLand.Models.UserImage>
+@{
+    ViewData["Title"] = "Submissions";
+
+    bool statusQry = false;
+    if (Context.Request.Query.ContainsKey("status"))
+    {
+        statusQry = Convert.ToBoolean(Context.Request.Query["status"]);
+    }
+}
+
+<h1>Learner Photo Submissions</h1>
+
+<div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+    <a href="/Admin/SubmissionIndex?status=false" class="btn @(statusQry ? "btn-outline-primary" : "btn-primary")" role="button" data-cy="pendingSubs">
+        Pending
+    </a>
+    <a href="/Admin/SubmissionIndex?status=true" class="btn @(statusQry ? "btn-primary" : "btn-outline-primary")" role="button" data-cy="approvedSubs">
+        Approved
+    </a>
+</div>
+
+<div class="row">
+    <div class="col col-8">
+    <table id="submissionTable" class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User IP</th>
+                <th>Upload Date</th>
+                <th>File Name</th>
+                <th>File Size</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (UserImage item in Model)
+            {
+                <tr onclick="populateCard('@item.UserImageiD', '@item.MediaPath')">
+                    <td>@item.UserImageiD</td>
+                    <td>@item.IP</td>
+                    <td>@item.DateUploaded</td>
+                    <td>@item.MediaPath.Split('/').Last()</td>
+                    <td>@item.FileSize</td>
+                    <td>
+                        <div class="btn-group" role="group" aria-label="Approve deny button group">
+                            @if (item.status)
+                            {
+                                <button type="button" class="btn btn-danger" onclick="confirmDeleteSub(@item.UserImageiD)" data-cy="delete @item.UserImageiD">Delete</button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-success" onclick="confirmSetStatus(@item.UserImageiD, true)" data-cy="approve @item.UserImageiD">Approve</button>
+                                <button type="button" class="btn btn-danger" onclick="confirmDeleteSub(@item.UserImageiD)" data-cy="deny @item.UserImageiD">Deny</button>
+                            }
+                        </div>
+                    </td>
+                
+                </tr>
+            }
+        </tbody>
+    </table>
+    </div>
+
+    <div class="col">
+        <div class="card">
+            <img src="" class="card-img-top" alt="" id="cardImageThumbnail">
+            <div class="card-body">
+                <h5 class="card-title" id="cardFilename" data-cy="cardFilename"></h5> <!-- filename -->
+                <p class="card-text" id="cardID"></p> <!-- id -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmSetStatus(subID, bStatus) {
+            // show confirmation message
+            if (bStatus) {
+                if (confirm("Confirm approval of submission #" + subID)) {
+                    // once confirmed, pass to set method
+                    setSubStatus(subID, bStatus);
+                } else {
+                    return;
+                }
+            }
+        }
+
+        // set the status of the input submission to the input boolean
+        function setSubStatus(subID, bStatus) {
+            // use an ajax call to get the Admin Controller SetLearnerMediaStatus action
+            $.ajax({
+                url: '/Admin/SetLearnerMediaStatus',
+                type: 'POST',
+                data: { id: subID, status: bStatus },
+                success: function () {
+                    location.reload();
+                },
+                error: function (error) {
+                    console.log(error);
+                    alert('Error setting status of submission ' + subID);
+                }
+            });
+        }
+
+        function confirmDeleteSub(subID) {
+            // show confirmation message
+            if (confirm("Warning: Are you SURE you want to delete submission #" + subID + "?")) {
+                // once confirmed, pass to set method
+                deleteSubmission(subID);
+            } else {
+                return;
+            }
+        }
+
+        function deleteSubmission(subID) {
+            // use an ajax call to get the Admin Controller DeleteLearnerSubmission action
+            $.ajax({
+                url: '/Admin/DeleteLearnerSubmission',
+                type: 'POST',
+                data: { id: subID },
+                success: function () {
+                    location.reload();
+                },
+                error: function (error) {
+                    console.log(error);
+                    alert('Error deleting submission ' + subID);
+                }
+            });
+        }
+
+        function populateCard(id, filePath) {
+            let relPath = filePath.slice(7);
+            console.log('clicked ' + relPath);
+            console.log(id);
+            document.getElementById('cardImageThumbnail').setAttribute('src', relPath);
+            document.getElementById('cardFilename').innerHTML = "File Name: " + relPath.split('/').slice(-1);
+            document.getElementById('cardID').innerHTML = "ID: " + id;
+        }
+
+    </script>
+}

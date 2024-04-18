@@ -1,0 +1,659 @@
+﻿@model IEnumerable<StoriesOfTheLand.Models.Feedback>
+@using StoriesOfTheLand.Controllers;
+@using Microsoft.AspNetCore.Authentication;
+@using System.Data;
+@using System.Collections.Generic;
+
+@{
+    ViewData["Title"] = "Portal";
+
+}
+<div>
+  
+    
+</div>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="row">
+                <!-- Three smaller boxes -->
+                <div class="col-md-4 p-3">
+                    <div>
+                        <div id="test" class="row card">
+                            <!--Title for the first box in the first row-->
+                            <div class="col-md-12 card-header">
+                                <h3 class="card-title" id="row1Box1Title">Amount of Feedback</h3>
+                            </div>
+                            <!--Space for chart in the first box in the first row-->
+                            <div class="card-body" id="row1Box1">
+                                <div class="col-md-12" style="height: 49px">
+                                    <!--Combo box to sort feedback statistics by date-->
+                                    <select id="feedbackstats" class="form-select" onchange="totalFeedbackSubmitted(value)">
+                                        <option value="All">All Time</option>
+                                        <option value="24">Last 24 Hours</option>
+                                        <option value="7">Last Week</option>
+                                        <option value="32">Last Month</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12 mb-0">
+                                    <div id="first_chart"></div>
+                                </div>
+                                <!--Value for totalFeedback-->
+                                <div class="col-md-12 mb-2">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <p id="totalfeedback" class="mb-0"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--Value for totalNewFeedback-->
+                                <div class="col-md-12 mb-2">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <p id="totalNewfeedback" class="mb-0"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--Value for totalPendingFeedback-->
+                                <div class="col-md-12 mb-2">
+                                    <div class="row">
+                                        <div>
+                                            <p id="totalPendingResponsefeedback" class="mb-0"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--Value for totalResolvedFeedback-->
+                                <div class="col-md-12 mb-2">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <p id="totalResolvedfeedback" class="mb-0"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--Value for totalInProgressFeedback-->
+                                <div class="col-md-12">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <p id="totalInProgressfeedback" class="mb-0"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 p-3">
+                    <div class="card">
+                        <!--Title for the second box in the first row-->
+                        <div class="card-header text-center" id="row1Box2Title">
+                            <h3 class="card-title">Total Page Views</h3>
+                        </div>
+
+                        <div class="card-body">
+                            <!--Space for chart in the second box in the first row-->
+                            <div class="border p-3" style="height: 202px;" id="row1Box2">
+                                <ul id="pageViewsList" class="list-group list-group-flush" style="max-height: 167px; overflow-y: auto;">
+                                    <!-- List items will be dynamically populated here -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 p-3">
+                    <div class="card">
+                        <!--Title for the third box in the first row-->
+                        <div class="card-header text-center" id="row1Box3Title">
+                            <h3 class="card-title" >User Device Usage</h3>
+                        </div>
+                        <div class="card-body">
+                            <!--Space for chart in the third box in the first row-->
+                            <div class="border border-black -3">
+                                <div id="row1Box3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="row">
+                <!-- Two bigger boxes -->
+                <div>
+                    <div class="card">
+                        <!--Title for the first box in the second row-->
+                        <div class="card-header text-center" id="row2Box1Title">
+                            <h3> User Engagement Over Time</h3>
+                        </div>
+                        <!--Space for chart in the first box in the second row-->
+                        <div class="card-body">
+                            <div id="row2Box1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Veritcal Navbar on the right -->
+        <div class="col-md-3">
+            <div class="vertical-divider">
+                <div class="p-3 float-right">
+                    <!--Displays what administator is logged in-->
+                    <div>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            var getUser = @HomeController.GetUserOnAzureAd(User);
+                            <h4 id="userInformation">@getUser.user_name </h4>
+                        }
+                    </div>
+                    <!--Navigation section for pages only administators can view-->
+                    <h3>Navigation</h3>
+                    <!--Link to the feedback page-->
+                    <ul class="nav flex-column">
+                        <a href="/Feedback/Index" class="pb-3">
+                            <button class="btn btn-primary" style="width: 52%">Feedback</button>
+                        </a>
+                        <a href="/Sponsor/Index" class="pb-3">
+                            <button class="btn btn-primary" style="width: 52%">Sponsors</button>
+                        </a>
+                        <a href="/Admin/PrintAll" class="pb-3">
+                            <button class="btn btn-primary" style="width: 52%">Print All QR Code</button>
+                        </a>
+                    </ul>
+                    <ul class="nav flex-column">
+                        <a href="/Admin/SubmissionIndex?status=true" class="pb-3">
+                            <button class="btn btn-primary" style="width: 52%" data-cy="learnerSubmissions">Learner Submissions</button>
+                        </a>
+                    </ul>
+                    <!--Statitics section to navigate to different Statistic sections-->
+                    <h3>Statistics</h3>
+                    <ul class="nav flex-column">
+                        <!--Overview section-->
+                        <!--Change view by calling hide(Overview) to hide other charts and draw overview charts-->
+                        <a class="pb-3">
+                            <button onclick="hide(value)" value="Overview" class="btn btn-primary" style="width: 52%">Overview</button>
+                        </a>
+                        <!--Tech Overview section-->
+                        <!--Change view by calling hide(tech) to hide other charts and draw overview charts-->
+                        <a class="pb-3">
+                            <button onclick="hide(value)" value="TechOverview" class="btn btn-primary">Tech Overview</button>
+                        </a>
+                        <!--Real Time section-->
+                        <!--Change view by calling hide(RealTime) to hide other charts and draw overview charts-->
+                        <a class="pb-3">
+                            <button onclick="hide(value)" value="RealTime" class="btn btn-primary" style="width: 52%">Real Time</button>
+                        </a>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+    google.charts.load('current', { 'packages': ['corechart'] }); // loads charts we are going to use from google charts
+    google.charts.setOnLoadCallback(() => drawChart('overview'));
+    let feedback = document.getElementById("row1Box1").innerHTML; // Store the inner HTML content
+ 
+    function hide(Page) {
+        switch (Page) {
+            case "Overview": // when hide(Overview) is called 
+                //change titles and values for each chart
+                document.getElementById("row1Box1Title").innerHTML = "Amount of Feedback";
+                document.getElementById("row1Box2Title").innerHTML = "<h3>Total Page Views</h3>";
+                document.getElementById("row1Box3Title").innerHTML = "<h3>User Device Usage</h3>";
+                document.getElementById("row2Box1Title").innerHTML = "<h3>User Engagement Over Time</h3>";
+                document.getElementById("row1Box2").innerHTML = "<ul id='pageViewsList' class='list-group list-group-flush' style='max-height: 167px; overflow-y: auto;'></ul>";
+                document.getElementById("row1Box1").innerHTML = feedback;
+                //calls drawChart(overview) to recreate charts
+                drawChart('overview');
+                totalFeedbackSubmitted('All');
+                break;
+            case "TechOverview":// when hide(TechOverview) is called
+                //changes title for all techoverview charts
+                document.getElementById("row1Box1Title").innerHTML = "Screen Resolution Information";
+                document.getElementById("row1Box2Title").innerHTML = "<h3>User Platform Usage</h3>";
+                document.getElementById("row1Box3Title").innerHTML = "<h3>User Browser Usage</h3>";
+                document.getElementById("row2Box1Title").innerHTML = "<h3>User Operating Systems</h3>";
+
+                //empties out all the charts
+                document.getElementById("row2Box1").innerHTML = "";
+                document.getElementById("row1Box3").innerHTML = "";
+                document.getElementById("row1Box1").innerHTML = "";
+                document.getElementById("row1Box2").innerHTML = "";
+                //call drawChart(tech) to create charts for tech overview
+                drawChart('tech');
+                break;
+            case "RealTime": // when hide(RealTime) is called
+                //changes title for all techoverview charts
+                document.getElementById("row1Box1Title").innerHTML = "Active Users";
+                document.getElementById("row1Box2Title").innerHTML = "<h3>Active Cities</h3>";
+                document.getElementById("row1Box3Title").innerHTML = "<h3>Event Count Last 30 Minutes</h3>";
+                document.getElementById("row2Box1Title").innerHTML = "<h3>Users Over the Last Week</h3>";
+                //empties out all the charts
+                document.getElementById("row2Box1").innerHTML = "";
+                document.getElementById("row1Box3").innerHTML = "";
+                document.getElementById("row1Box1").innerHTML = "";
+                document.getElementById("row1Box2").innerHTML = "";
+                //call drawChart(tech) to create charts for realtime
+                drawChart('realtime');
+                break;
+
+        }
+    }
+
+    function drawChart(option) {
+        switch (option) {
+            case 'overview':
+                var inputString = "@ViewBag.output";
+                var inputStringPages = "@ViewBag.pages";
+                var inputStringEngagement = "@ViewBag.Engagement";
+                var inputStringEngagement2 = "@ViewBag.Engagement2";
+
+
+                // Array to store results
+                const results = helperResults(inputString, true);
+                const results2 = helperResults(inputStringPages, true);
+                const resultsEngagement1 = helperResults(inputStringEngagement, false);
+                const resultsEngagement2 = helperResults(inputStringEngagement2, false);
+
+                // List
+                results2[0][0] = 'Home';
+                document.getElementById('pageViewsList').innerHTML = '';
+                for (var i = 0; i < results2.length; i++) {
+                    document.getElementById("pageViewsList").innerHTML += "<h6>" + results2[i][0] + " - " + results2[i][1] + "</h6>";
+                }
+
+                // Pie Chart
+                var data = new google.visualization.DataTable();
+                data.addColumn('string', 'Device');
+                data.addColumn('number', 'Number');
+
+                // Iterate over the 'results' array and add rows to the DataTable
+                results.forEach(function (entry) {
+                    data.addRow(entry);
+                });
+
+                var options = {
+                    pieHole: 0.5,
+                    pieSliceTextStyle: {
+                        color: 'black',
+                    },
+                    legend: 'none'
+                };
+
+                var chart = new google.visualization.PieChart(document.getElementById('row1Box3'));
+                chart.draw(data, options);
+
+                // Line Chart for User Engagement Metrics
+                var data2 = new google.visualization.DataTable();
+                data2.addColumn('date', 'Date');
+                data2.addColumn('number', 'Sessions');
+                data2.addColumn('number', 'Pageviews');
+
+                // Create a new array to hold the combined data
+                var combinedData = [];
+
+                // Push headers to the combined data array
+                combinedData.push(['Date', 'Sessions', 'Pageviews']);
+
+                // Determine the minimum length between resultsEngagement1 and resultsEngagement2
+                var minLength = Math.min(resultsEngagement1.length, resultsEngagement2.length);
+                for (var i = 0; i < minLength; i++) {
+                    // Check if both arrays have data at index i
+                    if (resultsEngagement1[i] && resultsEngagement2[i]) {
+                        // Replace the character '\r' with an empty string and assign back to the variable
+
+                        // Construct the date
+                        // Extract year, month, and day components from the date string using a regular expression
+                        var dateParts = resultsEngagement1[i][0].match(/(\d{4})(\d{2})(\d{2})/);
+
+                        // Construct the date object using the extracted components
+                        var year = parseInt(dateParts[1]);
+                        var month = parseInt(dateParts[2]) - 1; 
+                        var day = parseInt(dateParts[3]);
+                        resultsEngagement1[i][0] = new Date(year, month, day);
+
+                        // Push data from both arrays to combinedData
+                        combinedData.push([resultsEngagement1[i][0], resultsEngagement1[i][1], resultsEngagement2[i][1]]);
+                    }
+                }
+                console.log(combinedData)
+                combinedData.sort((a, b) => b[0] - a[0]);
+                console.log(combinedData);
+
+                // Now you can use combinedData with google.visualization.arrayToDataTable
+                var data2 = google.visualization.arrayToDataTable(combinedData);
+                var options2 = {
+                    curveType: 'function',
+                    legend: { position: 'bottom' }, // Positioning the legend at the bottom
+                    chartArea: { width: '80%', height: '70%' },
+                    hAxis: {
+                        title: 'Date'
+                    },
+                    vAxis: {
+                        title: 'Count'
+                    },
+                    series: {
+                        0: { color: '#3366cc', label: 'Page Views' }, // Series 0 represents Page Views
+                        1: { color: '#dc3912', label: 'Unique Visitors' } // Series 1 represents Unique Visitors
+                    },
+                };
+
+
+                var chart2 = new google.visualization.LineChart(document.getElementById('row2Box1'));
+                chart2.draw(data2, options2);
+                const divElementOverview = document.getElementById("row1Box3");
+
+                // Change the height of the element
+                divElementOverview.style.height = "202px"; // Change the height to whatever you need
+                break;
+            case 'tech':
+                // Draw the chart for the Tech Overview page
+                var inputString = "@ViewBag.browser";
+                var inputStringPlatform = "@ViewBag.platform";
+                var inputStringOperatingSystem = "@ViewBag.operatingSystem";
+                inputStringOperatingSystem = inputStringOperatingSystem.replace(/&#xD;&#xA;/g, '');
+                var inputStringScreenResolution = "@ViewBag.screenRes";
+
+                // Array to store results
+                const browserResults = helperResults(inputString, false, true);
+                const platformResults = helperResults(inputStringPlatform, false, true);
+                const operatingSystemResults = helperResults(inputStringOperatingSystem, true,);
+                const screenResolutionResults = helperResults(inputStringScreenResolution, false, false);
+
+                // Pie Chart
+                var browser = new google.visualization.DataTable();
+                browser.addColumn('string', 'Device');
+                browser.addColumn('number', 'Number');
+                var platform = new google.visualization.DataTable();
+                platform.addColumn('string', 'Device');
+                platform.addColumn('number', 'Number');
+                var operatingSystem = new google.visualization.DataTable();
+                operatingSystem.addColumn('string', 'OS');
+                operatingSystem.addColumn('number', 'users');
+
+                // Iterate over the 'results' array and add rows to the DataTable
+                browserResults.forEach(function (entry) {
+                    browser.addRow(entry);
+                });
+
+                platformResults.forEach(function (entry) {
+                    platform.addRow(entry);
+                });
+
+                operatingSystemResults.forEach(function (entry) {
+                    operatingSystem.addRow(entry);
+                });
+                document.getElementById('row1Box1').innerHTML = "<ul id='pageViewsList' class='list-group list-group-flush' style='max-height: 167px; overflow-y: auto;'></ul>";
+                for (var i = 0; i < screenResolutionResults.length; i++) {
+                    document.getElementById("pageViewsList").innerHTML += "<p>" + screenResolutionResults[i][0] + " - " + screenResolutionResults[i][1] + "</p>";
+                }
+                var browserOptions = {
+                    pieHole: 0.5,
+                    pieSliceTextStyle: {
+                        color: 'black',
+                    },
+                    legend: 'none'
+                };
+                var platformOptions = {
+                    pieHole: 0.5,
+                    pieSliceTextStyle: {
+                        color: 'black',
+                    },
+                    legend: 'none'
+                };
+                var osOptions = {
+                    hAxis: {
+                        title: 'Users'
+                    },
+                    vAxis: {
+                        title: 'Operating Systems'
+                    }
+                };
+
+                var browserChart = new google.visualization.PieChart(document.getElementById('row1Box3'));
+                browserChart.draw(browser, browserOptions);
+                var platformChart = new google.visualization.PieChart(document.getElementById('row1Box2'));
+                const divElement1 = document.getElementById("row1Box2");
+                const divElement2 = document.getElementById("row1Box3");
+
+                // // Change the height of the element
+                divElement2.style.height = "202px"; // Change the height to whatever you need
+
+                // Change the height of the element
+                divElement1.style.height = "202px"; // Change the height to whatever you need
+                platformChart.draw(platform, platformOptions);
+                var osChart = new google.visualization.BarChart(document.getElementById('row2Box1'));
+                osChart.draw(operatingSystem, osOptions);
+                break;
+
+            case 'realtime':
+                // Draw the chart for the Real Time page
+                var inputString = "@ViewBag.activeUsers";
+                const users = inputString.split(",");
+                document.getElementById('row1Box1').innerHTML = `<h1>${users[1]} </h1>`;
+
+                inputString = "@ViewBag.activeCities";
+                stringWithoutNumbers = inputString.replace(/\d+/g, '');
+                const cities = stringWithoutNumbers.split(",");
+
+                for (var i = 0; i < cities.length; i++) {
+                    document.getElementById('row1Box2').innerHTML += `<h5>${cities[i]} </h5>`;
+                }
+                
+
+                google.charts.setOnLoadCallback(drawChart);
+                inputString = "@ViewBag.UsersOver7Days "
+
+                var regex = /(\w+), (\d+)/g;
+                var match;
+                var dataArray = [];
+
+                // Iterate over matches
+                while ((match = regex.exec(inputString)) !== null) {
+                    // Extract day and number
+                    var day = match[1];
+                    var number = parseInt(match[2]); // Convert number string to integer
+
+                    // Push day and number as an array into dataArray
+                    dataArray.push([day, number]);
+                }
+
+                function drawChart() {
+                    var data = new google.visualization.DataTable();
+                    // Add columns
+                    data.addColumn('string', 'Day');
+                    data.addColumn('number', 'Users');
+
+                    // Add rows from dataArray
+                    dataArray.forEach(function (pair) {
+                        data.addRow(pair);
+                    });
+                    var options = {
+                        title: 'Users over the last Week',
+                        hAxis: { title: 'Day', titleTextStyle: { color: '#333' } },
+                        vAxis: { minValue: 0 }
+                    };
+
+                    var chart = new google.visualization.AreaChart(document.getElementById('row2Box1'));
+                    chart.draw(data, options);
+                }
+                var dataString = "@ViewBag.Test";
+               
+                // Remove HTML entity references for carriage return and line feed characters
+                const cleanedDataString = dataString.replace(/&#xD;&#xA;/g, ",");
+
+                // Convert the cleaned data string into an array of pairs
+                const dataArray1 = cleanedDataString.split(",");
+                console.log(dataArray1);
+                var total = 0;
+                for (var i = 1; i < dataArray1.length; i += 2) 
+                { 
+                    total += parseInt(dataArray1[i]);
+                }
+                console.log("Total event count for even minutes:", total);
+                document.getElementById('row1Box3').innerHTML = `<div style="display: flex; justify-content: center; align-items: center; height: 100%;"> <h1 style="font-size: 48px;">${total}</h1> </div>`;
+                
+                const divElement = document.getElementById("row1Box3");
+
+                // // Change the height of the element
+                divElement.style.height = "175px"; // Change the height to whatever you need
+                break;
+        }
+
+    }
+
+    function helperResults(inputString, useOldRegex, removeHtmlNewlines = false) {
+        const results = [];
+        let regex;
+
+        if (useOldRegex) {
+            // Old regular expression to extract device name and number
+            regex = /([^,\s]+),\s*(\d+)/g;
+        } else {
+            // New regular expression to extract device name and number
+            regex = new RegExp((removeHtmlNewlines ? '(?:&#xD;&#xA;|[\r\n])?' : '') + '([^,\s]+),\\s*(\\d+)', 'g');
+        }
+
+        if (removeHtmlNewlines) {
+            // Remove any newline characters and unwanted &#xD;&#xA; characters from the input string
+            inputString = inputString.replace(/&#xD;&#xA;/g, ''); // Removing HTML encoded newline characters
+        }
+
+        // Execute the regular expression repeatedly to match all occurrences
+        let match;
+        while ((match = regex.exec(inputString)) !== null) {
+            const deviceName = match[1];
+            const number = parseInt(match[2], 10);
+
+            results.push([deviceName, number]);
+        }
+
+        return results;
+    }
+
+
+
+
+    window.onload = totalFeedbackSubmitted('All');
+    document.getElementById("24something").onclick = totalFeedbackSubmitted(8);
+    function totalFeedbackSubmitted(time) {
+        // 0 - Total Feedback 1 - New Feedback 2 - In Progress Feedback 3 - Pending Response 4 - Resolved Feedback
+        let totalFeedbackAllTime = [0, 0, 0, 0, 0];
+        let totalFeedback24Hours = [0, 0, 0, 0, 0];
+        let totalFeedbackLastWeek = [0, 0, 0, 0, 0];
+        let totalFeedbackLastMonth = [0, 0, 0, 0, 0];
+
+    @foreach (Feedback item in Model)
+    {
+        // Increment the total feedback for all time
+        @:totalFeedbackAllTime[0]++;
+        switch (item.Status)
+        {
+            case Status.New:
+                // Increment the total feedback for new
+                @:totalFeedbackAllTime[1]++;
+                if (item.CreateDate >= DateTime.Now.AddDays(-1))
+                {
+                    @:totalFeedback24Hours[0]++;
+                    @:totalFeedback24Hours[1]++;
+                }
+                if (item.CreateDate >= DateTime.Now.AddDays(-7))
+                {
+                    @:totalFeedbackLastWeek[0]++;
+                    @:totalFeedbackLastWeek[1]++;
+                }
+                if (item.CreateDate >= DateTime.Now.AddMonths(-1))
+                {
+                    @:totalFeedbackLastMonth[0]++;
+                    @:totalFeedbackLastMonth[1]++;
+                }
+                break;
+            case Status.InProgress:
+                @:totalFeedbackAllTime[2]++;
+                if (item.CreateDate >= DateTime.Now.AddDays(-1))
+                {
+                    @:totalFeedback24Hours[0]++;
+                    @:totalFeedback24Hours[2]++;
+                }
+                if (item.CreateDate >= DateTime.Now.AddDays(-7))
+                {
+                    @:totalFeedbackLastWeek[0]++;
+                    @:totalFeedbackLastWeek[2]++;
+                }
+                if (item.CreateDate >= DateTime.Now.AddMonths(-1))
+                {
+                    @:totalFeedbackLastMonth[0]++;
+                    @:totalFeedbackLastMonth[2]++;
+                }
+                break;
+            case Status.PendingReponse:
+                @:totalFeedbackAllTime[3]++;
+                if (item.CreateDate >= DateTime.Now.AddDays(-1))
+                {
+                    @:totalFeedback24Hours[0]++;
+                    @:totalFeedback24Hours[3]++;
+                }
+                if (item.CreateDate >= DateTime.Now.AddDays(-7))
+                {
+                    @:totalFeedbackLastWeek[0]++;
+                    @:totalFeedbackLastWeek[3]++;
+                }
+                if (item.CreateDate >= DateTime.Now.AddMonths(-1))
+                {
+                    @:totalFeedbackLastMonth[0]++;
+                    @:totalFeedbackLastMonth[3]++;
+                }
+                break;
+            case Status.Resolved:
+                @:totalFeedbackAllTime[4]++;
+                if (item.CreateDate >= DateTime.Now.AddDays(-1))
+                {
+                    @:totalFeedback24Hours[0]++;
+                    @:totalFeedback24Hours[4]++;
+                }
+                if (item.CreateDate >= DateTime.Now.AddDays(-7))
+                {
+                    @:totalFeedbackLastWeek[0]++;
+                    @:totalFeedbackLastWeek[4]++;
+                }
+                if (item.CreateDate >= DateTime.Now.AddMonths(-1))
+                {
+                    @:totalFeedbackLastMonth[0]++;
+                    @:totalFeedbackLastMonth[4]++;
+                }
+                break;
+        }
+    }
+
+                if (time == 'All') {
+            document.getElementById("totalfeedback").innerHTML = "Total: " + totalFeedbackAllTime[0];
+            document.getElementById("totalNewfeedback").innerHTML = "New: " + totalFeedbackAllTime[1];
+            document.getElementById("totalInProgressfeedback").innerHTML = "In Progress: " + totalFeedbackAllTime[2];
+            document.getElementById("totalPendingResponsefeedback").innerHTML = "Pending Response: " + totalFeedbackAllTime[3];
+            document.getElementById("totalResolvedfeedback").innerHTML = "Resolved: " + totalFeedbackAllTime[4];
+        }
+        if (time == '24') {
+            document.getElementById("totalfeedback").innerHTML = "Total: " + totalFeedback24Hours[0];
+            document.getElementById("totalNewfeedback").innerHTML = "New: " + totalFeedback24Hours[1];
+            document.getElementById("totalInProgressfeedback").innerHTML = "In Progress: " + totalFeedback24Hours[2];
+            document.getElementById("totalPendingResponsefeedback").innerHTML = "Pending Response: " + totalFeedback24Hours[3];
+            document.getElementById("totalResolvedfeedback").innerHTML = "Resolved: " + totalFeedback24Hours[4];
+        }
+        if (time == '7') {
+            document.getElementById("totalfeedback").innerHTML = "Total: " + totalFeedbackLastWeek[0];
+            document.getElementById("totalNewfeedback").innerHTML = "New: " + totalFeedbackLastWeek[1];
+            document.getElementById("totalInProgressfeedback").innerHTML = "In Progress: " + totalFeedbackLastWeek[2];
+            document.getElementById("totalPendingResponsefeedback").innerHTML = "Pending Response: " + totalFeedbackLastWeek[3];
+            document.getElementById("totalResolvedfeedback").innerHTML = "Resolved: " + totalFeedbackLastWeek[4];
+        }
+        if (time == '32') {
+            document.getElementById("totalfeedback").innerHTML = "Total: " + totalFeedbackLastMonth[0];
+            document.getElementById("totalNewfeedback").innerHTML = "New: " + totalFeedbackLastMonth[1];
+            document.getElementById("totalInProgressfeedback").innerHTML = "In Progress: " + totalFeedbackLastMonth[2];
+            document.getElementById("totalPendingResponsefeedback").innerHTML = "Pending Response: " + totalFeedbackLastMonth[3];
+            document.getElementById("totalResolvedfeedback").innerHTML = "Resolved: " + totalFeedbackLastMonth[4];
+        }
+    }
+</script>

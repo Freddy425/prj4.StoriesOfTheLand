@@ -1,0 +1,263 @@
+@model IEnumerable<StoriesOfTheLand.Models.Specimen>
+
+@{
+    ViewData["Title"] = "Specimen Map";
+}
+
+
+<!--This div is responsible for storing the map-->
+<div class="container">
+    <div class="row">
+        <!-- Map Column -->
+        <div class="col-md-6 mx-auto">
+            <div id="map" style="max-width: 100%; height: 500px;"></div>
+        </div>
+
+        <!-- Table Column -->
+            @if (bool.Parse(Environment.GetEnvironmentVariable("BYPASS_AUTHENTICATION") ?? "false") || User.Identity.IsAuthenticated)
+            {
+            <div class="col-md-6">
+                <!-- Include the Edit partial view -->
+                <partial name="LocationEditModal.cshtml" model="new StoriesOfTheLand.Models.Specimen()" />
+                <!-- Include the Delete partial view -->
+                <partial name="LocationDeleteModal.cshtml" model="new StoriesOfTheLand.Models.Specimen()" />
+
+                <div id="locationlist" class="table-responsive" style="max-width: 100%; height: 500px;">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th><h3>Name</h3></th>
+                                <th><h3>Latitude</h3></th>
+                                <th><h3>Longitude</h3></th>
+                                <th><h3>Edit</h3></th>
+                                <th><h3>Delete</h3></th>
+                            </tr>
+                        </thead>
+                        <tbody id="locationlistbody">
+                            @foreach (Specimen item in Model)
+                            {
+                                int currentID = item.SpecimenID;
+                                string linkToSpecimen = "/specimen/Details/" + currentID;
+
+                                <tr>
+                                    <td class="">
+                                        <a style="text-decoration: none; color: black;" href="@Html.Raw(linkToSpecimen)">@Html.DisplayFor(Model => item.EnglishName)</a>
+                                    </td>
+                                    @if (item.Latitude != null && item.Longitude != null)
+                                    {
+                                        <td>
+                                            <a style="text-decoration: none; color: black;" href="@Html.Raw(linkToSpecimen)">@Html.DisplayFor(Model => item.Latitude)</a>
+                                        </td>
+                                        <td>
+                                            <a style="text-decoration: none; color: black;" href="@Html.Raw(linkToSpecimen)">@Html.DisplayFor(Model => item.Longitude)</a>
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td><p>No Marker Data</p></td>
+                                        <td></td>
+                                    }
+                                    <td>
+                                        <button type="button" class="btn btn-primary edit-btn" data-bs-toggle="modal" data-bs-target="#locationEditModal"
+                                                data-specimen-id="@item.SpecimenID" data-specimen-latitude="@item.Latitude" data-specimen-longitude="@item.Longitude">
+                                            Edit
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button type="button" data-bs-toggle="modal" data-bs-target="#locationDeleteModal" class="btn btn-danger btn-sm delete-btn"
+                                                data-specimen-id="@item.SpecimenID" data-specimen-name="@item.EnglishName">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            }
+    </div>
+</div>
+
+
+
+
+<style>
+    .H_ib .H_ib_closeIcon {
+        font-size: 14px; /* Adjust the font size to your desired size */
+        /* Add any additional styling properties as needed */
+    }
+
+</style>
+
+<!--These scripts are responsible for calling the HERE API-->
+<script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
+<script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
+<script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
+<script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
+
+ <script>
+    var canvas = document.getElementById('map');
+    var width = canvas.offsetWidth;
+    canvas.height = width * 0.25; // 0.75 is the aspect ratio
+
+    /*
+    This function is responsible for adding all of the markers to the map
+    by looping through the list of speciman and creating markers for the maps.
+    */
+    function createMap(map) {
+
+        var markerGroup = new H.map.Group();
+
+        // Loop through each specimen
+        @foreach (Specimen item in Model)
+        {
+            @if (item.Latitude != null || @item.Longitude != null)
+            {
+                // Create a marker based on the current item's longitude and latitude.
+                @:var currentMarker = new H.map.DomMarker({ lat: @item.Latitude, lng: @item.Longitude})
+
+                // Check if there is a Media Image for the specimen
+                @if (item.MediaList.Any())
+                {
+                // If theres media, use the media path
+                     @:currentMarker.setData('<div class="container-fluid"> <a style="color: inherit;" href="/Specimen/Details/@item.SpecimenID"><h3 style="white-space: nowrap;" target="_blank"><u>@item.EnglishName</u></h3></a></div> <div class="text-center"> <div style="margin-left: -10px;">@if(item.CreeName != null){<strong>Cree: </strong><em>@item.CreeName</em><br />}@if(@item.LatinName != null){<strong>Latin: </strong><em>@item.LatinName</em>}</div> <img data-cy="specImg" class="img-fluid rounded" src="/media/@item.MediaList.First(m => m.MediaType.Equals("Image")).MediaPath"></img></div></div>')
+                    
+                }
+                else
+                {
+                // If not, use a placeholder
+                    @:currentMarker.setData('<div class="container-fluid"> <a style="color: inherit;" href="/Specimen/Details/@item.SpecimenID"><h3 style="white-space: nowrap;" target="_blank"><u>@item.EnglishName</u></h3></a></div> <div class="text-center"> <div style="margin-left: -10px;">@if(item.CreeName != null){<strong>Cree: </strong><em>@item.CreeName</em><br />}@if(@item.LatinName != null){<strong>Latin: </strong><em>@item.LatinName</em>}</div><img data-cy="specPlc" class="img-fluid rounded" src="/images/placeholder.jpg"></img></div></div>')
+                  
+                }
+
+
+                // Add the object to the markerGroup
+                @:markerGroup.addObject(currentMarker);
+            }
+        }
+
+
+
+        map.addObject(markerGroup);
+        markerGroup.addEventListener('tap', function (evt) {
+            var bubble = new H.ui.InfoBubble(evt.target.getGeometry());
+            bubble.setContent(evt.target.getData())
+            ui.addBubble(bubble);
+            map.setCenter({ lat: evt.target.getGeometry().lat + 0.001, lng: evt.target.getGeometry().lng });
+        }, false);
+
+
+    }
+
+    // Create a platform object that's responsible for communicating with the HERE API
+    var platform = new H.service.Platform({
+        // The API key linked to the HERE developer account.
+        // Sign up for a HERE API account here - https://account.here.com/sign-in
+        apikey: "FjTPewOBETNxRc3D7_eBZEn1OdkMymU_JfYc6yeC8VU"
+    });
+
+    // DefaultLayers stores information about the map, for example, the view type, center position, etc.
+    var defaultLayers = platform.createDefaultLayers();
+
+    // The map should be created into the map div above
+    var map = new H.Map(document.getElementById('map'),
+        // Set the type to be satellite view
+        defaultLayers.raster.satellite.map, {
+        // Centre it to be specific coordinates
+        center: { lat: 53.88059, lng: -105.40139 },
+        //  Set the zoom to zoom in on the map
+        zoom: 17,
+        // Set the pixel ratio to be based on the device's pixel ratio.
+        pixelRatio: window.devicePixelRatio || 1
+    });
+
+    // Resize the map
+    window.addEventListener('resize', () => map.getViewPort().resize());
+
+    // Add the Resize event
+    var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+
+    // store the method call of createDefault that will call the API and create the map.
+    var ui = H.ui.UI.createDefault(map, defaultLayers);
+
+    // Onload, create the map.
+    window.onload = function () {
+        createMap(map);
+    }
+</script>
+
+ <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const deletionSuccess = urlParams.get('deletionSuccess');
+        if (deletionSuccess) {
+            alert("You deleted the specimen locations successfully.");
+            window.history.replaceState(null, null, window.location.pathname);
+        }
+    });
+
+    $(document).ready(function () {
+
+
+    @if (TempData["LatitudeError"] != null || TempData["LongitudeError"] != null)
+    { // Show the modal
+        //if (TempData["LatitudeError"].ToString() != null)
+        //{
+
+        //}
+        //var errorMessage = TempData["LatitudeError"].ToString;
+        var specimenIDString = TempData["Specimenid"].ToString;
+        //where data-specimen-id from edit-btn
+           
+
+
+        @:$('#locationEditModal').modal('show');
+
+        //in editmodal display errors.
+    }
+
+
+
+           
+            $('.delete-btn').click(function () {
+                var specimenId = $(this).data('specimen-id');
+                var specimenName = $(this).data('specimen-name');
+
+                // Set the text in the modal to confirm deletion
+                var deletetext = 'Are you sure you want to delete the ' + specimenName + ' specimen location?';
+                $('#locationDeleteModal .modal-body').text(deletetext);
+
+                // Update the form action for deletion
+                var form = $('#locationDeleteModal form');
+                form.attr('action', '/Specimen/DeleteLocation/' + specimenId);
+
+                // Show the delete modal
+                $('#locationDeleteModal').modal('show');
+            });
+
+        $('.edit-btn').click(function () {
+
+            var specimenId = $(this).data('specimen-id');
+            // Fetch the data-specimen-id attribute value
+            var latitude = $(this).data('specimen-latitude');
+            var longitude = $(this).data('specimen-longitude');
+            $('#locationEditModal .text-danger').text('');
+
+
+            $('#latInput').val(latitude);
+            $('#longInput').val(longitude);
+            $('#specID').val(specimenId);
+            //clear out error messages
+            $('#latInput').removeClass("is-invalid");
+            $('#longInput').removeClass("is-invalid");
+
+        });
+
+    });
+</script>
+

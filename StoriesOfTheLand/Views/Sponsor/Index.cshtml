@@ -1,0 +1,208 @@
+﻿@model IEnumerable<StoriesOfTheLand.Models.Sponsor>
+@using Microsoft.AspNetCore.Identity
+
+@{
+    ViewData["Title"] = "Sponsors";
+}
+
+<h1>Sponsor Index</h1>
+
+
+    <div>
+        <button class="btn btn-primary mt-5" id="createSponsor"
+                data-bs-toggle="modal" data-bs-target="#SponsorModal" onclick="SponsorCreateNoFill()">
+            Create
+        </button>
+     
+    </div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.SponsorName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SponsorURL)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.SponsorName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SponsorURL)
+            </td>
+            <td>
+              <div class="d-flex">
+                  <button type="button" class="btn btn-primary image-btn mt-2 ms-1 mb-4" data-bs-toggle="modal" data-bs-target="#mediaModal" data-sponsor-id="@item.SponsorID" >
+            Add Image
+        </button>         
+                  <button class="btn btn-primary mt-2 ms-1 mb-4" id="@("deleteSponsor"+item.SponsorID)" onclick="SponsorDeleteModalFill('@item.SponsorID', '@item.SponsorName')"
+                                             data-bs-toggle="modal" data-bs-target="#deleteSponsorModal">
+                                Delete
+                            </button>
+                        </div>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+
+
+
+  
+
+@if (bool.Parse(Environment.GetEnvironmentVariable("BYPASS_AUTHENTICATION") ?? "false") || User.Identity.IsAuthenticated)
+{
+    @*modal for the delet function*@
+    <div class="modal fade" id="deleteSponsorModal" tabindex="-1" role="dialog" aria-labelledby="myDeleteModalLabel" aria-hidden="true" data-dismiss="false">
+
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="SponsorDeleteModalLabel">Delete Sponsor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form asp-action="Delete">
+                    <div class="modal-body">
+                        <div class="form-group mb-3 border" style="height: 200px;  border-style: dotted;" id="Sponsor-Delete-Form-container">
+                            <div class="row justify-content-center align-items-center">
+                                <div class="col-md-6 ">
+                                    <input type="hidden" id="deleteSponsorID" name="id"/>
+                                    Are you sure you want to delete?
+                                    <span id="confirmationMessage"></span>
+
+                                    <input style="width: 300px"  id="DeleteName"  />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-Primary" type="submit" id="DeleteSponsorButton" value="Delete">Delete</button>
+                        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal" id="cancelDelete">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @*modal to create instances*@
+    <div class="modal fade" id="SponsorModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-dismiss="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sponsorModalLabel">Sponsor</h5>
+                    <button class="btn btn-secondary" type="button"  data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form asp-action="Save" id="drag-and-drop-form">
+                    <div class="modal-body">
+
+                        <div class="form-group">
+                            <input type="hidden" id="SponsorID" value="@TempData["SponsorID"]" name="id" />
+                            <label class="control-label">Name</label>
+                            <input id="SponsorName" name="SponsorName"  value="@TempData["SponsorName"]" class="form-control @(TempData["SponsorNameError"] != null ? "is-invalid" : "")" />
+                           <div id="nameError" class="invalid-feedback">
+                            @TempData["SponsorNameError"]
+                        </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Url</label>
+                            <input id="SponsorURL" name="SponsorURL" value="@TempData["SponsorURL"]" class="form-control @(TempData["SponsorURLError"] != null ? "is-invalid" : "")" />
+                          <div id="URLError" class="invalid-feedback">
+                            @TempData["SponsorURLError"]
+                        </div>
+
+                        </div>
+                   
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" type="submit" id="saveSponsorButton" value="Upload" data-bs-target="#mediaModal" >Save</button>
+                        <button class="btn btn-secondary" id="cancelButton" type="button" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+}
+ @*A partial view for the Media modal*@
+            <partial name="AddMedia.cshtml" model="new StoriesOfTheLand.Models.AddMediaViewModel()" />
+
+                             <script>
+        window.onload= ()=>{
+    
+
+        var sponsorModal = new bootstrap.Modal(document.getElementById('SponsorModal'));
+
+
+        @if (TempData["HasErrors"] != null)
+        {
+            <text>            
+                sponsorModal.show();              
+            </text>
+        }
+        }
+        
+        // When opened the media modal we change the displayed info and the id for action
+
+
+        // When opened the delete media modal we change the displayed info and the id for action
+     
+     function SponsorCreateNoFill()
+        {
+        $('#SponsorName').val('');
+        $('#SponsorURL').val('');
+        $('#SponsorImagePath').val('');
+        $('#SponsorID').val(0);
+
+        $('#SponsorName').removeClass("is-invalid");
+        $('#SponsorURL').removeClass("is-invalid");
+        $('#SponsorImagePath').removeClass("is-invalid");
+
+        @if (ViewData["TitleError"] != null)
+        {
+            <text>
+                $('#SponsorName').addClass("is-invalid");
+                $('#titleError').text("@(
+        ViewData["TitleError"]
+        )");
+            </text>
+        }
+
+
+        }
+        function SponsorDeleteModalFill(id, name)
+        {
+            
+       console.log(id);
+       console.log(name);
+
+            $('#deleteSponsorID').val(id);
+            $('#DeleteName').val(name);
+         
+
+
+        }
+         $(document).ready(function(){
+       $('[data-bs-toggle="modal"][data-bs-target="#mediaModal"]').click(function () {
+
+       
+       var button=$(this);
+       var sponsorid = button.data('sponsor-id');
+           
+
+        
+
+
+            $('#mediaModal #sponsorID').val(sponsorid);
+            
+           
+        });
+         });
+    </script>

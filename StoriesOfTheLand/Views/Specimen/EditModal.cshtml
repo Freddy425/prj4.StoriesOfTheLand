@@ -1,0 +1,275 @@
+﻿@model StoriesOfTheLand.Models.Specimen
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+
+
+<div class="modal fade" id="editSpecimenModal" tabindex="-1" aria-labelledby="editSpecimenModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSpecimenModalLabel">Edit Specimen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form" asp-controller="Specimen" asp-action="Edit" asp-route-id="@Model.SpecimenID" method="post">
+                    <input type="hidden" asp-for="SpecimenID" />
+                    <div class="mb-3">
+                        <label asp-for="EnglishName" class="form-label">English Name:</label>
+                        <input asp-for="EnglishName" class="form-control" />
+                        <span asp-validation-for="EnglishName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="LatinName" class="form-label">Latin Name:</label>
+                        <input asp-for="LatinName" class="form-control" />
+                        <span asp-validation-for="LatinName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CreeName" class="form-label">Cree Name:</label>
+                        <input asp-for="CreeName" class="form-control" />
+                        <span asp-validation-for="CreeName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="SpecimenDescription" class="form-label">Specimen Description:</label>
+                        <textarea asp-for="SpecimenDescription" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="SpecimenDescription" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CulturalSignificance" class="form-label">Cultural Significance:</label>
+                        <textarea asp-for="CulturalSignificance" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="CulturalSignificance" class="text-danger"></span>
+                    </div>
+
+                    <fieldset id="coordinates">
+                        <input type="radio" id="utm" name="coordinates" onclick="handleUTMClick();" value="utm" />
+                        <label for="html">UTM</label>
+                        <input type="radio" id="latLong" name="coordinates" onclick="utmToLatLon();" value="latLong" checked />
+                        <label for="latLong">Latitude/Longitude</label>
+                    </fieldset>
+
+                    <div class="mb-3">
+                        <label asp-for="Latitude" id="latitudeLabel" class="form-label">Latitude:</label>
+                        <input asp-for="Latitude" onchange="clientSideValidation();" class="form-control" />
+                        <span asp-validation-for="Latitude" class="text-danger"></span>
+                        <div id="eastingErrorMessage"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Longitude" id="longitudeLabel" class="form-label">Longitude:</label>
+                        <input asp-for="Longitude" onchange="clientSideValidation();" class="form-control" />
+                        <span asp-validation-for="Longitude" class="text-danger"></span>
+                        <div id="northingErrorMessage"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Media List:</label>
+                        <ul id="mediaListElement" class="list-group">
+                            
+                        </ul>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" id="submitButton" onclick="SaveToUTM();" class="btn btn-primary">Save Changes</button>
+                    </div>
+                    <div id="emptyLatAndLongInput"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function() {
+        var errorMessage = '@ViewData["ErrorMessage"]';
+        if (errorMessage) {
+            var editSpecimenModal = new bootstrap.Modal(document.getElementById('editSpecimenModal'));
+            editSpecimenModal.show();
+        }
+        
+    });
+
+    /**
+     * this method makes sure error messages are cleared when the modal is closed
+     * aswell as making sure "Lat/Long" is the coordinate type that is selected on modal open
+     */
+    $(document).ready(function () {
+        $('#editSpecimenModal').on('hidden.bs.modal', function () {
+            $('#latLong').prop('checked', true);
+            document.getElementById("northingErrorMessage").innerHTML = "";
+            document.getElementById("eastingErrorMessage").innerHTML = "";
+        });
+    });
+
+    
+
+    /**
+     * This function will convert UTM to Lat and long when the "Save" button is pressed
+     */
+    function SaveToUTM() {
+        var northing = document.getElementById('Longitude').value;
+        var easting = document.getElementById('Latitude').value;
+        document.getElementById("northingErrorMessage").innerHTML = "";
+        document.getElementById("eastingErrorMessage").innerHTML = "";
+        var radioButton = document.getElementById('utm');
+        if (radioButton.checked) {
+            if(northing != "" && easting != ""){
+                utmToLatLon();
+            }
+        }
+    }
+
+
+    /**
+    * This function does some client side validation for the range of UTM coordinates
+    */
+    function clientSideValidation() {
+        var UTMradioButton = document.getElementById('utm');
+        var northing = document.getElementById('Longitude').value;
+        var easting = document.getElementById('Latitude').value;
+        //will display client side validation for the northing and easting since it is stored as latitude and longitude
+
+        //will check if the "UTM" radio button is checked
+        if (UTMradioButton.checked) {
+            //if northing is not between these two values it will show a error message
+            if (northing > 5983984 || northing < 5872271) {
+
+                document.getElementById("northingErrorMessage").innerHTML = "<div class='text-danger'>Northing needs to be between 5983984 and 5872271<div>";
+            }
+            else {
+                document.getElementById("northingErrorMessage").innerHTML = "";
+            }
+            //if easting is not between these two values it will show a error message
+            if (easting > 500000 || easting < 434451) {
+                document.getElementById("eastingErrorMessage").innerHTML = "<div class='text-danger'>Easting needs to be between 500000 and 434451<div>";
+            }
+            else {
+                document.getElementById("eastingErrorMessage").innerHTML = "";
+            }
+        }
+
+        //if the input box for northing is null there is no error because it can be null
+        if (northing == "") {
+            document.getElementById("northingErrorMessage").innerHTML = "";
+        }
+        //if the input box for easting is null there is no error because it can be null
+        if (easting == "") {
+            document.getElementById("eastingErrorMessage").innerHTML = "";
+        }
+
+        //if either of the northing or easting it empty and the other has a value it will disable the save button
+        //as saving with only one value will break the map
+        if (northing == "" && easting != "" || northing != "" && easting == "") {
+            document.getElementById("submitButton").disabled = true;
+            document.getElementById("emptyLatAndLongInput").innerHTML = "<div class='text-danger'>Both latitude and longitude are required or none<div>";
+        }
+        else {
+            document.getElementById("submitButton").disabled = false;
+            document.getElementById("emptyLatAndLongInput").innerHTML = "";
+        }
+    }
+
+    /**
+     * this is a helper method for convertint lat and long to UTM
+     */
+    function deg2rad(deg) {
+        return deg * (Math.PI / 180);
+    }
+
+    /**
+    * This function will convert Lat and Long to UTM
+    */
+    function handleUTMClick() {
+        // Constants for WGS84 ellipsoid
+        document.getElementById('latitudeLabel').textContent = "Easting";
+        document.getElementById('longitudeLabel').textContent = "Northing";
+        var lat = document.getElementById('Latitude').value;
+        var lon = document.getElementById('Longitude').value; 
+
+        // Constants for WGS84 ellipsoid
+        var a = 6378137.0; // semi-major axis
+        var e = 0.081819191042828; // eccentricity
+
+        // Constants for UTM
+        var k0 = 0.9996; // scale factor
+        var zoneWidth = 6; // each UTM zone is 6 degrees wide
+        var lon0 = -105; // Central meridian of Zone 13U
+
+        // Convert latitude and longitude to radians
+        var latRad = deg2rad(lat);
+        var lonRad = deg2rad(lon);
+        var lon0Rad = deg2rad(lon0);
+
+        // Calculations for UTM
+        var N = a / Math.sqrt(1 - e ** 2 * Math.sin(latRad) ** 2);
+        var T = Math.tan(latRad) ** 2;
+        var C = e ** 2 * Math.cos(latRad) ** 2 / (1 - e ** 2);
+        var A = Math.cos(latRad) * (lonRad - lon0Rad);
+        var A2 = A ** 2;
+        var A3 = A ** 3;
+        var A5 = A ** 5;
+
+        var M = a * ((1 - e ** 2 / 4 - 3 * (e ** 4) / 64 - 5 * (e ** 6) / 256) * latRad - (3 * e ** 2 / 8 + 3 * e ** 4 / 32 + 45 * e ** 6 / 1024) * Math.sin(2 * latRad) + (15 * e ** 4 / 256 + 45 * e ** 6 / 1024) * Math.sin(4 * latRad) - (35 * e ** 6 / 3072) * Math.sin(6 * latRad));
+
+        // Calculate UTM coordinates
+        var X = 500000 + (k0 * N * A * (1 + A2 / 6 * (1 - T + C) + A5 / 120 * (5 - 18 * T + T ** 2 + 72 * C - 58 * e ** 2))); // Easting
+        var Y = (k0 * (M + N * Math.tan(latRad) * (A2 / 2 + A5 / 24 * (5 - T + 9 * C + 4 * C ** 2) + A5 ** 2 / 720 * (61 - 58 * T + T ** 2 + 600 * C - 330 * e ** 2)))) + ((latRad < 0) ? 10000000 : 0); // Northing
+
+        document.getElementById("Latitude").value = X.toFixed(5);
+        document.getElementById("Longitude").value = Y.toFixed(5);
+    }
+
+    /**
+     * this is a helper metho to convert UTM to latitude and longitude
+     */
+    function rad2deg(rad) {
+        return rad * 180.0 / Math.PI;
+    }
+    /**
+     * this method converts latitude and longitude to UTM
+     */
+    function utmToLatLon() {
+
+        document.getElementById('latitudeLabel').textContent = "Latitude";
+        document.getElementById('longitudeLabel').textContent = "Longitude";
+        var easting = document.getElementById('Latitude').value;
+        var northing = document.getElementById('Longitude').value; 
+        var zoneNumber = 13;
+        var isNorthernHemisphere = true;
+        var k0 = 0.9996;
+        var a = 6378137.0;
+        var e = 0.081819191042828;
+        var e1sq = 0.006739497;
+        var e2sq = 0.006739497 / (1 - 0.006739497);
+        var e1 = (1 - Math.sqrt(1 - e * e)) / (1 + Math.sqrt(1 - e * e));
+        var x = easting - 500000.0;
+        var y = isNorthernHemisphere ? northing : northing - 10000000.0;
+
+        var longOrigin = (zoneNumber - 1) * 6 - 180 + 3;
+        var eccPrimeSquared = e2sq / (1 - e2sq);
+        var M = y / k0;
+        var mu = M / (a * (1.0 - Math.pow(e, 2) / 4.0 - 3 * Math.pow(e, 4) / 64.0 - 5 * Math.pow(e, 6) / 256.0));
+        var phi1Rad = mu + (3.0 * e1 / 2.0 - 27.0 * Math.pow(e1, 3) / 32.0) * Math.sin(2.0 * mu) + (21.0 * e1 * e1 / 16.0 - 55.0 * Math.pow(e1, 4) / 32.0) * Math.sin(4.0 * mu) + (151.0 * Math.pow(e1, 3) / 96.0) * Math.sin(6.0 * mu);
+        var N1 = a / Math.sqrt(1.0 - Math.pow(e * Math.sin(phi1Rad), 2.0));
+        var T1 = Math.pow(Math.tan(phi1Rad), 2.0);
+        var C1 = eccPrimeSquared * Math.pow(Math.cos(phi1Rad), 2.0);
+        var R1 = a * (1.0 - Math.pow(e, 2.0)) / Math.pow(1.0 - Math.pow(e * Math.sin(phi1Rad), 2.0), 1.5);
+        var D = x / (N1 * k0);
+
+        var lat = phi1Rad - (N1 * Math.tan(phi1Rad) / R1) * (D * D / 2.0 - (5.0 + 3.0 * T1 + 10.0 * C1 - 4.0 * C1 * C1 - 9.0 * eccPrimeSquared) * Math.pow(D, 4.0) / 24.0 + (61.0 + 90.0 * T1 + 298.0 * C1 + 45.0 * T1 * T1 - 252.0 * eccPrimeSquared - 3.0 * C1 * C1) * Math.pow(D, 6.0) / 720.0);
+        var lon = (D - (1.0 + 2.0 * T1 + C1) * Math.pow(D, 3.0) / 6.0 + (5.0 - 2.0 * C1 + 28.0 * T1 - 3.0 * Math.pow(C1, 2.0) + 8.0 * eccPrimeSquared + 24.0 * Math.pow(T1, 2.0)) * Math.pow(D, 5.0) / 120.0) / Math.cos(phi1Rad);
+
+        // Convert back to degrees
+        lat = rad2deg(lat);
+        lon = longOrigin + rad2deg(lon);
+
+        document.getElementById("Latitude").value = lat.toFixed(5);
+        document.getElementById("Longitude").value = lon.toFixed(5);
+    }
+
+</script>

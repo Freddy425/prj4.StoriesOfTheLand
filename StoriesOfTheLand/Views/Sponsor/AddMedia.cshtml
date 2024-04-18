@@ -1,0 +1,87 @@
+﻿@* commenting this out because it breaks my QRcode button - Jett
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+*@
+
+@model StoriesOfTheLand.Models.AddMediaViewModel;
+
+
+<div class="modal fade" id="mediaModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="myModalLabel">Add Media</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="UploadImage" method="post" enctype="multipart/form-data" id="imageUploadForm">
+                  
+                    <div class="form-group mb-3 border" style="height: 250px; border-style: dotted;" id="drag-and-drop-container">
+                        <div class="row justify-content-center align-items-center">
+                            <div class="col-md-6 text-center">
+                                <label for="uploadedImage" class="form-label">Drag and Drop or</label>
+                                <input type="file" name="uploadedImage" class="form-control-file" id="file-input" required />
+                                <img src="/media/uploadIcon.png" alt="Upload Icon" style="width: 100px; height: 100px; object-fit: contain;" />
+                            </div>
+                            <span id="SponsorImageError" class="text-danger"></span>
+
+                        </div>
+                        
+                    </div>
+                    <input type="hidden"  name="id" id="sponsorID" />
+                    <div class="text-center mt-5">
+                        <button class="btn btn-secondary" type="submit">Add</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var dragAndDropContainer = $('#drag-and-drop-container');
+        var fileInput = $('#file-input');
+
+        // when the dragAndDropContainer is dragged over it will change the backgroud color to blue
+        dragAndDropContainer.on('dragover', function (e) {
+            e.preventDefault();
+            dragAndDropContainer.css('background-color', '#e1f5fe');
+        });
+        //when the drage leaves is will change the background color back to the orginal 
+        dragAndDropContainer.on('dragleave', function () {
+            dragAndDropContainer.css('background-color', '');
+        });
+        //when it is droped it will add the data to the fileInput
+        dragAndDropContainer.on('drop', function (e) {
+            e.preventDefault();
+            dragAndDropContainer.css('background-color', '');
+
+            var files = e.originalEvent.dataTransfer.files;
+
+            // Update the file input with the dropped files
+            fileInput.prop('files', files);
+        });
+    });
+</script>
+<script type="text/javascript">
+    //when the window loads
+    window.onload = function () {
+        //get the mediaModal
+        var mediaModal = new bootstrap.Modal(document.getElementById('mediaModal'));
+
+        //get the viewData that could be sent from specimenController
+        var errorMessage = '@TempData["ImageError"]';
+        
+        //if there is an error message we will open the modal to show the error messages 
+        if (errorMessage) {
+
+            $('#SponsorImageError').text(errorMessage); // Set the error message
+            
+           mediaModal.show();
+        }
+        
+    };
+
+
+</script>

@@ -1,0 +1,78 @@
+﻿@model StoriesOfTheLand.Models.Specimen
+
+@{
+    ViewData["Title"] = "New Specimen";
+}
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Create New Specimen</h1>
+    <hr />
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10 col-sm-12">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="EnglishName" class="form-label">English Name:</label>
+                    <input asp-for="EnglishName" class="form-control" />
+                    <span asp-validation-for="EnglishName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="LatinName" class="form-label">Latin Name:</label>
+                    <input asp-for="LatinName" class="form-control" />
+                    <span asp-validation-for="LatinName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="CreeName" class="form-label">Cree Name:</label>
+                    <input asp-for="CreeName" class="form-control" />
+                    <span asp-validation-for="CreeName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="SpecimenDescription" class="form-label">Specimen Description:</label>
+                    <textarea asp-for="SpecimenDescription" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="SpecimenDescription" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="CulturalSignificance" class="form-label">Cultural Significance:</label>
+                    <textarea asp-for="CulturalSignificance" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="CulturalSignificance" class="text-danger"></span>
+                </div>
+
+               @* <!-- Hidden field for Specimen Image Path with default value as empty -->
+                <div class="form-group mb-3" style="display: none;">
+                    <label asp-for="SpecimenMedia.SpecimenImagePath" class="form-label">Image Path:</label>
+                    <input asp-for="SpecimenMedia.SpecimenImagePath" class="form-control" />
+                    <span asp-validation-for="SpecimenMedia.SpecimenImagePath" class="text-danger"></span>
+                </div>
+
+                <!-- Hidden field for Specimen Audio Path with default value as empty -->
+                <div class="form-group mb-3" style="display: none;">
+                    <label asp-for="SpecimenMedia.SpecimenAudioPath" class="form-label">Audio Path:</label>
+                    <input asp-for="SpecimenMedia.SpecimenAudioPath" class="form-control" />
+                    <span asp-validation-for="SpecimenMedia.SpecimenAudioPath" class="text-danger"></span>
+                </div>*@
+                <div class="text-center mt-5">
+                    <button class="btn btn-secondary" type="submit">
+                        Create
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <div class="text-left mt-4">
+        <a asp-action="Index">Back to List</a>
+    </div>
+</div>
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,675 @@
+<!--IEnumerable is required in order to pass in a list into the Index page-->
+@model IEnumerable<StoriesOfTheLand.Models.Specimen>
+@using Microsoft.AspNetCore.Http
+@using Newtonsoft.Json
+
+<!--Set the Title of the Page, being Specimen Index-->
+@{
+    ViewData["Title"] = "Specimen Index";
+
+    var specimenList = TempData["SpecimenList"] as List<Specimen>;
+    var specimenProgress = Context.Session.GetString("SpecimenProgress");
+    List<int> specimenProgressList = JsonConvert.DeserializeObject<List<int>>(specimenProgress) ?? new List<int>();
+    var specimens = Model;
+
+    var frenchList = new List<FR_Specimen>();
+    var listOfSpecimensWithFrench = new List<Specimen>();
+    // Loop through the specimens
+    foreach (Specimen item in specimens)
+    {
+        if (item.FR_Specimen == null)
+        {
+            FR_Specimen fr = new FR_Specimen();
+            fr.FR_EnglishName = "-";
+            item.FR_Specimen = fr;
+        }
+        frenchList.Add(item.FR_Specimen);
+        listOfSpecimensWithFrench.Add(item);
+    }
+
+}
+
+<div class="dropdown">
+    <button class="float-right btn btn-info dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+        Dropdown button
+    </button>
+    <ul id="discoveryProgress" class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+
+        @if (specimenList != null && specimenList.Any())
+        {
+            // Display the specimens
+            foreach (var specimen in specimenList)
+            {
+                        <li>
+                            <p data-specimen-id="@specimen.SpecimenID" class="dropdown-item">
+                        @specimen.EnglishName
+                                <!-- Display other specimen properties as needed -->
+                            </p>
+                        </li>
+
+            }
+        }
+        else
+        {
+                <p>Uh oh there was an error!</p>
+        }
+
+    </ul>
+</div>
+
+
+
+
+@if (bool.Parse(Environment.GetEnvironmentVariable("BYPASS_AUTHENTICATION") ?? "false") || User.Identity.IsAuthenticated)
+{
+    <div id="alertPlaceholder" style="display: none;" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+        <span id="alertMessage">This is a message that shouldnt be displayed</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    //Only will displayed if the page is displaying the english content.
+    <div class="en">
+        <div style="display:none;">Debug: @TempData["CreateResponse"]</div>
+        <div id="prevEdit" style="display:none;">Debug: @TempData["EditResponse"]</div>
+
+        <div class="d-flex justify-content-end">
+            @* a partial view for the modal and from to add media*@
+            <partial name="CreateModal.cshtml" model="new StoriesOfTheLand.Models.Specimen()" />
+        </div>
+
+        @*A partial view for the Edit modal*@
+        <partial name="EditModal.cshtml" model="new StoriesOfTheLand.Models.Specimen()" />
+
+        @*A partial view for the Delete modal*@
+        <partial name="DeleteModal.cshtml" model="new StoriesOfTheLand.Models.Specimen()" />
+
+        <div id="alertPlaceholder" style="display: none;" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+            <span id="alertMessage">You deleted the specimen successfully.</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+}
+
+<h1>Specimen Index</h1>
+<!--This is a form for submitting the searched value that is passed into the index box that
+    updates the list of specimen
+-->
+<div class="pb-3">
+    <p>
+        Enter an English Name, Latin Name, or Cree Name: <input type="text" id="searchContent" name="SearchString" />
+        <button type="button" class="btn btn-primary" onclick="searchIndex()" id="searchBtn">Search</button>
+    </p>
+    <input class="btn btn-primary" type="submit" value="Refresh List" />
+</div>
+<div class="form-check form-switch mt-3">
+    <input class="form-check-input" id="toggleLanguage" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+    <label class="form-check-label" for="flexSwitchCheckDefault">French</label>
+</div>
+<!--Table for the Specimen Index-->
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <!--Top of the Table-->
+        <thead>
+            <tr>
+                <!--Display English Name above English Name column-->
+                <th class="en" scope="col">
+                    <h3>English Name</h3>
+                    <a style="color: black;" id="enSortAlpha" onclick="sortIndex('EnglishName')">@Html.Raw("&#x25B2;")</a><br />
+                    <div id="enSortReverse">
+                     <a style="color: black;" id="enSortReverse" onclick="sortIndex('EnglishName_desc')">@Html.Raw("&#x25BC;")</a>
+                    </div>
+                </th>
+
+                <th class="fr" scope="col"  style="display:none;">
+                    <h3>French Name</h3>
+                    <a style="text-decoration: none; color: black;" id="frSortAlpha" onclick="sortIndex('FrenchName')">@Html.Raw("&#x25B2;")</a><br />
+                    <a style="text-decoration: none; color: black;" id="frSortReverse" onclick="sortIndex('FrenchName_desc')">@Html.Raw("&#x25BC;")</a>
+                </th>
+
+                <th scope="col">
+                    <h3>Latin Name</h3>
+                    <a style="text-decoration: none; color: black;" id="latinSortAlpha" onclick="sortIndex('LatinName')">@Html.Raw("&#x25B2;")</a><br />
+                    <a style="text-decoration: none; color: black;" id="latinSortReverse" onclick="sortIndex('LatinName_desc')">@Html.Raw("&#x25BC;")</a>
+                </th>
+
+                <th scope="col">
+                    <h3>Cree Name</h3>
+                    <a style="text-decoration: none; color: black;" id="creeSortAlpha" onclick="sortIndex('CreeName')">@Html.Raw("&#x25B2;")</a><br />
+                    <a style="text-decoration: none; color: black;" id="creeSortReverse" onclick="sortIndex('CreeName_desc')">@Html.Raw("&#x25BC;")</a>
+                </th>
+
+                @if (bool.Parse(Environment.GetEnvironmentVariable("BYPASS_AUTHENTICATION") ?? "false") || User.Identity.IsAuthenticated)
+                {
+                    <th class="en">Actions</th>
+                }
+            </tr>
+        </thead>
+        <!--Body of the table, Where the data in the database will go-->
+        <tbody id="bodyOfTable">
+            <!--Loop through each specimen-->
+            @foreach (Specimen item in specimens)
+            {
+                int currentID = item.SpecimenID;
+                string linkToSpecimen = "/Specimen/Details/" + currentID;
+                if (item.CreeName == null)
+                {
+                    item.CreeName = "-";
+                }
+                <tr>
+                    <!--Display each English Name or French Name-->
+                    <th class="en" scope="row">
+                        <a style="text-decoration: none; color: black;" href="@Html.Raw(linkToSpecimen)">@Html.DisplayFor(Model => item.EnglishName)</a>
+                    </th>
+
+                    <th class="fr" style="display:none;" scope="row">
+                        @if (item.FR_Specimen != null)
+                        {
+                            <a style="text-decoration: none; color: black;" href="@Html.Raw(linkToSpecimen)">@Html.DisplayFor(Model => item.FR_Specimen.FR_EnglishName)</a>
+                        }
+                        else
+                        {
+                            <a style="text-decoration: none; color: black;" href="@Html.Raw(linkToSpecimen)">@Html.DisplayFor(Model => item.EnglishName)</a>
+                        }
+                    </th>
+
+                    <!--Display each Latin Name-->
+                    <th scope="row">
+                        <a style="text-decoration: none; color: black;" href="@Html.Raw(linkToSpecimen)">@Html.DisplayFor(Model => item.LatinName)</a>
+                    </th>
+                    <!--Display each Cree Name-->
+                    <th scope="row">
+                        <a style="text-decoration: none; color: black;" href="@Html.Raw(linkToSpecimen)">@Html.DisplayFor(Model => item.CreeName)</a>
+                    </th>
+
+                    @if (bool.Parse(Environment.GetEnvironmentVariable("BYPASS_AUTHENTICATION") ?? "false") || User.Identity.IsAuthenticated)
+                    {
+                        <td class="en">
+                            <!-- Trigger the delete modal with a button -->
+                            <button type="button" class="btn btn-danger btn-sm delete-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteSpecimenModal"
+                                    data-specimen-id="@item.SpecimenID"
+                                    data-specimen-name="@item.EnglishName">
+                                Delete
+                            </button>
+                            <button type="button" id="editButon" class="btn btn-primary edit-btn btn-sm" data-bs-toggle="modal" data-bs-target="#editSpecimenModal" data-specimen-id="@item.SpecimenID">
+                                Edit
+                            </button>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+    function sortIndex(sortOrder) {
+        var specimens = @Html.Raw(Json.Serialize(listOfSpecimensWithFrench));
+        var isFrenchEnabled = document.getElementById("toggleLanguage").checked; // Check the state of the French toggle
+        switch (sortOrder) {
+            case 'EnglishName':
+                specimens.sort(function (a, b) {
+                    return a.englishName.localeCompare(b.englishName);
+                });
+                break;
+            case 'EnglishName_desc':
+                specimens.sort(function (a, b) {
+                    return b.englishName.localeCompare(a.englishName);
+                });
+                break;
+            case 'LatinName':
+                specimens.sort(function (a, b) {
+                    return a.latinName.localeCompare(b.latinName);
+                });
+                break;
+            case 'LatinName_desc':
+                specimens.sort(function (a, b) {
+                    return b.latinName.localeCompare(a.lLatinName);
+                });
+                break;
+            case 'CreeName':
+                specimens.sort(function (a, b) {
+                    return a.creeName.localeCompare(b.creeName);
+                });
+                break;
+            case 'CreeName_desc':
+                specimens.sort(function (a, b) {
+                    return b.creeName.localeCompare(a.creeName);
+                });
+                break;
+            case 'FrenchName':
+                specimens.sort(function (a, b) {
+                    var aFrenchName = isFrenchEnabled && a.FR_Specimen ? a.FR_Specimen.FR_EnglishName : a.englishName;
+                    var bFrenchName = isFrenchEnabled && b.FR_Specimen ? b.FR_Specimen.FR_EnglishName : b.englishName;
+                    return aFrenchName.localeCompare(bFrenchName);
+                });
+                break;
+            case 'FrenchName_desc':
+                specimens.sort(function (a, b) {
+                    var aFrenchName = isFrenchEnabled && a.FR_Specimen ? a.FR_Specimen.FR_EnglishName : a.englishName;
+                    var bFrenchName = isFrenchEnabled && b.FR_Specimen ? b.FR_Specimen.FR_EnglishName : b.englishName;
+                    return bFrenchName.localeCompare(aFrenchName);
+                });
+                break;
+
+
+        }
+
+        console.log(specimens);
+        populateTable(specimens, isFrenchEnabled);
+        
+    }
+    function searchIndex() {
+        // Obtain the elements text within the search box
+        var specimens = @Html.Raw(Json.Serialize(listOfSpecimensWithFrench));
+        var value = document.getElementById('searchContent').value.toLowerCase();
+        var isFrenchEnabled = document.getElementById("toggleLanguage").checked; // Check the state of the French toggle
+
+        var newSpecimenThatMatchSearch = specimens.filter(function (specimen) {
+            // Determine which name to search based on the toggle state
+            var nameToSearch = isFrenchEnabled ? (specimen.fR_Specimen ? specimen.fR_Specimen.fR_EnglishName.toLowerCase() : "") : specimen.englishName.toLowerCase();
+            var creeNameToSearch = specimen.creeName ? specimen.creeName.toLowerCase() : "";
+            var latinNameToSearch = specimen.latinName ? specimen.latinName.toLowerCase() : "";
+            return nameToSearch.includes(value) || creeNameToSearch.includes(value) || latinNameToSearch.includes(value);
+        });
+
+        populateTable(newSpecimenThatMatchSearch, isFrenchEnabled);
+    }
+
+
+
+    function populateTable(specimens, isFrenchEnabled) {
+        // Clear the table body
+        var tableBody = document.getElementById('bodyOfTable');
+        tableBody.innerHTML = '';
+
+        // Loop through the specimens
+        specimens.forEach(function (specimen) {
+            var detailsURL = '/Specimen/Details/' + specimen.specimenID;
+            console.log(detailsURL);
+
+            // Create a new row element
+            var row = document.createElement('tr');
+
+            // Determine which name to use based on the toggle state
+            var nameToShow = isFrenchEnabled ? (specimen.fR_Specimen ? specimen.fR_Specimen.fR_EnglishName : specimen.englishName || "-") : specimen.englishName || "-";
+
+            // Append the name based on the toggle state
+            var nameCell = document.createElement('th');
+            var nameLink = document.createElement('a');
+            nameLink.href = detailsURL;
+            nameLink.textContent = nameToShow;
+            nameLink.style.textDecoration = 'none';
+            nameLink.style.color = 'black';
+            nameCell.appendChild(nameLink);
+            row.appendChild(nameCell);
+
+            // Always append columns for Latin and Cree names
+            var latinNameCell = document.createElement('th');
+            var latinNameLink = document.createElement('a');
+            latinNameLink.href = detailsURL;
+            latinNameLink.textContent = specimen.latinName;
+            latinNameLink.style.textDecoration = 'none';
+            latinNameLink.style.color = 'black';
+            latinNameCell.appendChild(latinNameLink);
+            row.appendChild(latinNameCell);
+
+            var creeNameCell = document.createElement('th');
+            var creeNameLink = document.createElement('a');
+            creeNameLink.href = detailsURL;
+            creeNameLink.textContent = specimen.creeName || "-";
+            creeNameLink.style.textDecoration = 'none';
+            creeNameLink.style.color = 'black';
+            creeNameCell.appendChild(creeNameLink);
+            row.appendChild(creeNameCell);
+
+            if (@(bool.Parse(Environment.GetEnvironmentVariable("BYPASS_AUTHENTICATION") ?? "false").ToString().ToLower()) || @User.Identity.IsAuthenticated.ToString().ToLower()) {
+                // Create a cell for buttons
+                var buttonsCell = document.createElement('td');
+                buttonsCell.className = 'en';
+                // Create delete button
+                var deleteButton = document.createElement('button');
+                deleteButton.type = 'button';
+                deleteButton.className = 'btn btn-danger btn-sm delete-btn';
+                deleteButton.setAttribute('data-bs-toggle', 'modal');
+                deleteButton.setAttribute('data-bs-target', '#deleteSpecimenModal');
+                deleteButton.setAttribute('data-specimen-id', specimen.specimenID);
+                deleteButton.setAttribute('data-specimen-name', specimen.englishName);
+                deleteButton.textContent = 'Delete';
+
+                // Create edit button
+                var editButton = document.createElement('button');
+                editButton.type = 'button';
+                editButton.id = 'editButon';
+                editButton.className = 'btn btn-primary edit-btn btn-sm';
+                editButton.setAttribute('data-bs-toggle', 'modal');
+                editButton.setAttribute('data-bs-target', '#editSpecimenModal');
+                editButton.setAttribute('data-specimen-id', specimen.specimenID);
+                editButton.textContent = 'Edit';
+
+                // Append buttons to buttonsCell
+                buttonsCell.appendChild(deleteButton);
+                buttonsCell.appendChild(editButton);
+                // Append buttonsCell to row
+                row.appendChild(buttonsCell);
+            }
+
+            // Append the row to the table body
+            tableBody.appendChild(row);
+        });
+        console.log(tableBody);
+    }
+
+
+
+    document.getElementById("toggleLanguage").onchange = function () {
+        var isFrenchEnabled = this.checked;
+        var specimens = @Html.Raw(Json.Serialize(listOfSpecimensWithFrench));
+        console.log(specimens);
+        console.log(isFrenchEnabled);
+            // Call populateTable based on toggle state
+        if (isFrenchEnabled) {
+            populateTable(specimens, true); // Populate with French specimen
+        } else {
+            populateTable(specimens, false); // Populate with base fields
+        }
+    };
+
+
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const deletionSuccess = urlParams.get('deletionSuccess');
+        if (deletionSuccess) {
+            // Set the message for the alert
+            document.getElementById('alertMessage').textContent = "You deleted the specimen successfully.";
+
+            // Show the alert
+            document.getElementById('alertPlaceholder').style.display = 'block';
+
+            // Automatically hide the alert after a few seconds if desired
+            setTimeout(function () {
+                $('#alertPlaceholder').fadeOut('slow');
+            }, 5000); // Adjust time as needed
+
+            // Remove the query string parameter from the URL without reloading the page
+            window.history.replaceState(null, null, window.location.pathname);
+        }
+
+    });
+
+    $(document).ready(function () {
+
+        // Access specimenProgressList variable in JavaScript
+        var specimenProgressListJson = '@JsonConvert.SerializeObject(specimenProgressList)';
+        var specimenProgressIds = JSON.parse(specimenProgressListJson);
+
+        console.log(specimenProgressIds);
+
+
+        // Clear the content of the displaySection div
+        $('#displaySection').empty();
+
+        // Iterate over the specimenProgressIds array and append each ID to the div
+        specimenProgressIds.forEach(function (id) {
+            $('#displaySection').append('<p>' + id + '</p>');
+        });
+
+        // Iterate through all specimens in the dropdown
+        $('#discoveryProgress').find('p[data-specimen-id]').each(function () {
+            var specimenId = parseInt($(this).data('specimen-id'));
+            // Check if the specimen ID exists in the session data
+            if (specimenProgressIds.includes(specimenId)) {
+                $(this).addClass('discovered'); // Apply 'discovered' class if found
+            }
+        });
+
+        // Setting the Discovery Progress Total
+        var totalSpecimens = $('#discoveryProgress').find('p[data-specimen-id]').length;
+        var discoveryProgressText = "Discovery Progress (" + specimenProgressIds.length + "/" + totalSpecimens + ")";
+        document.getElementById("dropdownMenuButton").textContent = discoveryProgressText;
+
+
+
+        var language = "EN"; // Default language
+
+
+        $("#toggleLanguage").click(function () {
+            if (language === "EN") {
+                language = "FR";
+                $(".en").hide();
+                $(".fr").show();
+            } else {
+                language = "EN";
+                $(".fr").hide();
+                $(".en").show();
+            }
+        });
+
+
+        //If the user ordered the list by a french asc or desc order we will display the french name
+        if ('@TempData["Language"]' == "FR") {
+            $("#toggleLanguage").click();
+        }
+
+
+        //If there is a Message from controller display it
+        var message = '@Html.Raw(TempData["Message"])';
+        if (message != "") {
+            $('#alertMessage').text(message); // Set the message text
+            $('#alertPlaceholder').show(); // Make the alert visible
+
+            // Automatically hide the alert after a few seconds if desired
+            setTimeout(function () {
+                $('#alertPlaceholder').fadeOut('slow');
+            }, 5000);
+        }
+
+
+        // Check if there is any response data from the Create action
+        var createResponse = @Html.Raw(TempData["CreateResponse"] ?? "null");
+            
+        //If there is data on the TempBag load the modal
+        if (createResponse) {
+            if (createResponse.Values) {
+                // Populate form fields with the user input values
+                $('#specimenModal #EnglishName').val(createResponse.Values.EnglishName);
+                $('#specimenModal #LatinName').val(createResponse.Values.LatinName);
+                $('#specimenModal #CreeName').val(createResponse.Values.CreeName);
+                $('#specimenModal #SpecimenDescription').val(createResponse.Values.SpecimenDescription);
+                $('#specimenModal #CulturalSignificance').val(createResponse.Values.CulturalSignificance);
+                $('#specimenModal #Latitude').val(createResponse.Values.Latitude);
+                $('#specimenModal #Longitude').val(createResponse.Values.Longitude);
+            }
+
+            // Display field-specific error messages
+            Object.keys(createResponse.Errors).forEach(function (key) {
+                var fieldErrors = createResponse.Errors[key];
+                if (fieldErrors.length > 0) {
+                    // Convert the error list to a single string
+                    var errorMessage = fieldErrors.join(', ');
+                    // Find the corresponding '.text-danger' span for the field and set its text
+                    $('#specimenModal #' + key).siblings('.text-danger').text(errorMessage);
+                }
+            });
+            // Show the modal
+            $('#specimenModal').modal('show');
+
+
+            
+            
+
+
+        }
+        //If there is data on the edit TempData load the modal
+        var editResponse = @Html.Raw(TempData["editResponse"] ?? "null");
+        if (editResponse) {
+            if (editResponse.Values) {
+                // Populate form fields with the user input values
+                $('#editSpecimenModal #SpecimenID').val(editResponse.Values.SpecimenID);
+                $('#editSpecimenModal #EnglishName').val(editResponse.Values.EnglishName);
+                $('#editSpecimenModal #LatinName').val(editResponse.Values.LatinName);
+                $('#editSpecimenModal #CreeName').val(editResponse.Values.CreeName);
+                $('#editSpecimenModal #SpecimenDescription').val(editResponse.Values.SpecimenDescription);
+                $('#editSpecimenModal #CulturalSignificance').val(editResponse.Values.CulturalSignificance);
+                $('#editSpecimenModal #Latitude').val(editResponse.Values.Latitude);
+                $('#editSpecimenModal #Longitude').val(editResponse.Values.Longitude);
+                $('#editSpecimenModal form').attr('action', '/Specimen/Edit/' + editResponse.Values.SpecimenID);
+
+
+            }
+            // Display field-specific error messages
+            Object.keys(editResponse.Errors).forEach(function (key) {
+                var fieldErrors = editResponse.Errors[key];
+                if (fieldErrors.length > 0) {
+                    // Convert the error list to a single string
+                    var errorMessage = fieldErrors.join(', ');
+                    // Find the corresponding '.text-danger' span for the field and set its text
+                    $('#editSpecimenModal #' + key).siblings('.text-danger').text(errorMessage);
+                }
+            });
+            // Show the modal
+            $('#editSpecimenModal').modal('show');
+        }
+
+        //When clicking load a modal with the english name. Update the action
+        $('.delete-btn').click(function () {
+            var specimenId = $(this).data('specimen-id');
+            var specimenName = $(this).data('specimen-name');
+
+            // Set the text in the modal to confirm deletion
+            $('#deleteSpecimenModal .modal-body').text(`Are you sure you want to delete "${specimenName}" specimen? This action cannot be undone.`);
+
+            // Update the form action for deletion
+            var form = $('#deleteSpecimenModal form');
+            form.attr('action', '/Specimen/Delete/' + specimenId);
+
+            // Show the delete modal
+            $('#deleteSpecimenModal').modal('show');
+        });
+
+        //When a edit button is clicked
+        $('.edit-btn').click(function () {
+
+            var specimenId = $(this).data('specimen-id'); // Fetch the data-specimen-id attribute value
+            $('#editSpecimenModal .text-danger').text('');
+
+            //We dont want the previous responses anymore
+    @Html.Raw(TempData["EditResponse"] = null);
+
+            // Fetch specimen data from the server
+            $.ajax({
+                url: '/Specimen/GetSpecimenById',
+                type: 'GET',
+                data: { id: specimenId },
+                success: function (specimen) {
+                    // Populate form fields
+                    $('#editSpecimenModal #EnglishName').val(specimen.englishName);
+                    $('#editSpecimenModal #LatinName').val(specimen.latinName);
+                    $('#editSpecimenModal #CreeName').val(specimen.creeName);
+                    $('#editSpecimenModal #SpecimenDescription').val(specimen.specimenDescription);
+                    $('#editSpecimenModal #CulturalSignificance').val(specimen.culturalSignificance);
+                    $('#editSpecimenModal #Latitude').val(specimen.latitude);
+                    $('#editSpecimenModal #Longitude').val(specimen.longitude);
+
+                    // Populate the media list
+                    // If there is media, each object should have a corresponding list item with a delete button
+                    var mediaListElement = $('#editSpecimenModal #mediaListElement');
+                    mediaListElement.empty();
+
+                    if (specimen.mediaList && specimen.mediaList.length > 0) {
+                        specimen.mediaList.forEach(function (media) {
+                            var listItem = $('<li class="list-group-item row"></li>');
+                            listItem.append('<p>' + media.mediaPath + "  (" + media.mediaType + ")" + '</p>');
+                            listItem.append('<button type="button" class="btn btn-danger" onclick="confirmDelete(`' + media.mediaPath + '`, `' + specimenId + '`)">Delete</button>');
+                            mediaListElement.append(listItem);
+                        });
+                    } else {
+                        mediaListElement.append('<li class="list-group-item">No media available</li>');
+                    }
+
+                    // Set the SpecimenID value
+                    $('#editSpecimenModal #SpecimenID').val(specimen.specimenId);
+
+                    $('#editSpecimenModal form').attr('action', '/Specimen/Edit/' + specimenId);
+
+                    // Show the modal
+                    $('#editSpecimenModal').modal('show');
+                },
+                error: function (error) {
+                    console.log(error);
+                    alert('Error fetching specimen data');
+                }
+            });
+        });
+
+    });
+
+    
+
+    // posts a confirmation method 
+    function confirmDelete(mediaPath, specimenId) {
+        // show confirmation message
+        if (confirm("WARNING: Are you sure you want to delete this media? Closing the Edit page will not reverse this action.")) {
+            deleteMedia(mediaPath, specimenId);
+        } else {
+            return;
+        }
+    }
+
+    // makes a call to the deleteMedia controller action in SpecimenController
+    function deleteMedia(path, id) {
+        $.ajax({
+            url: '/Specimen/DeleteMedia',
+            type: 'POST',
+            data: { id: id, mediaPath: path },
+            success: function () {
+                console.log("Successfully deleted media")
+                // reload the updated media list
+                reloadMediaList(id);
+            },
+            error: function (error) {
+                console.log(error);
+                alert('Error deleting media');
+            }
+        });
+    }
+
+    // reload the media list in a modal after editing
+    function reloadMediaList(specimenId) {
+        $.ajax({
+            url: '/Specimen/GetSpecimenById/' + specimenId,
+            type: 'GET',
+            data: { id: specimenId },
+            success: function (specimen) {
+                var mediaListElement = $('#editSpecimenModal #mediaListElement');
+                mediaListElement.empty();
+
+                if (specimen.mediaList && specimen.mediaList.length > 0) {
+                    specimen.mediaList.forEach(function (media) {
+                        var listItem = $('<li class="list-group-item row"></li>');
+                        listItem.append('<p>' + media.mediaPath + "  (" + media.mediaType + ")" + '</p>');
+                        listItem.append('<button type="button" class="btn btn-danger" onclick="confirmDelete(`' + media.mediaPath + '`, `' + specimenId + '`)">Delete</button>');
+                        mediaListElement.append(listItem);
+                    });
+                } else {
+                    mediaListElement.append('<li class="list-group-item">No media available</li>');
+                }
+            },
+            error: function (error) {
+                console.log(error);
+                alert('Error fetching media list');
+            }
+        });
+    }
+
+  
+
+
+
+</script>
+

@@ -1,0 +1,184 @@
+﻿@model StoriesOfTheLand.Models.Specimen;
+@using Microsoft.AspNetCore.Authorization;
+
+
+@{
+    ViewData["Title"] = Model.EnglishName;
+}
+
+@*Check to see if the user is authenticated*@
+@if (bool.Parse(Environment.GetEnvironmentVariable("BYPASS_AUTHENTICATION") ?? "false") || User.Identity.IsAuthenticated)
+{
+    @*If they are authorized, view the Add Media Button*@
+    @* a partial view for the modal and from to add media*@
+   // <partial name="AddMedia.cshtml" model="new StoriesOfTheLand.Models.AddMediaViewModel()"/>
+}
+
+@* Alert box for if a success alert is present *@
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>Success!</strong> @ViewBag.SuccessMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@* Display the Specimen's Latin Name *@
+<div class="text-center mb-5">
+    @*Display For displays the model's property, in this case, it's a Latin Name*@
+    <div id="englishName" class="d-print-block">
+        <h3 class="d-print-none">English Name</h3>
+        @Html.DisplayFor(model => model.EnglishName)
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Model.CreeName))
+    {
+        <div id="creeName" class="d-print-block">
+            <h3 class="d-print-none">Cree Name</h3>
+            <div>
+                @Html.DisplayFor(model => model.CreeName)
+            </div>
+            @* @*Display the audio player for the cree name if there is a path for it*@
+            @for (int i = 0; i < Model.MediaList.Count; i++)
+            {
+                @if (Model.MediaList.ElementAt(i).MediaType=="Audio")
+                {
+                    <div class="Audio d-print-none">
+                        <audio controls>
+                            <source src="/media/@Model.MediaList.ElementAt(i).MediaPath" type="audio/mp3">
+                        </audio>
+                    </div>
+                }
+            }
+        </div>
+    }
+    <div id="latinName" class="d-print-none">
+        <h3>Latin Name</h3>
+        @Html.DisplayFor(model => model.LatinName)
+    </div>
+    @{
+        int imageCount = 0; //stores how many images are in media list 
+        int imageLocation =  0; // stores the location of the image for if there is a single image
+       
+        @for (int i = 0; i < Model.MediaList.Count; i++)
+        {
+            if (Model.MediaList.ElementAt(i).MediaType == "Image")
+            {
+                imageLocation = i;
+                imageCount++; //for every Media in media list that is of type image ++ imageCount
+
+                if(imageCount == 1)
+                {
+                    <div id="firstImage" class="h-40 d-flex align-items-center justify-content-center d-none d-print-flex">
+                        <img  class="justify-content-center align-items-center" src="/media/@Model.MediaList.ElementAt(i).MediaPath" style="width: 350px; height: 350px; object-fit: contain;" />
+                    </div>
+                    
+                }
+            }
+        }
+    }
+       @*if there is more than one image there will be a carousel*@
+       @if(imageCount>1)
+        {
+            <div id="imageCarousel" class="h-40 d-flex align-items-center justify-content-center d-print-none" style="height: 350px;">
+            @*If the SpecimenImagePath split is more than one we will make a carousel*@
+                    <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                    @for (int i = 0; i < Model.MediaList.Count; i++)
+                    {
+                        if (Model.MediaList.ElementAt(i).MediaType == "Image")
+                        {
+                             <div class="carousel-item @(i == 0 ? "active" : "")">
+                                    <img src="/media/@Model.MediaList.ElementAt(i).MediaPath" alt="@Model.MediaList.ElementAt(i).MediaPath" style="width: 400px; height: 350px; object-fit: contain;">
+                             </div>
+                        }
+                    }
+                        </div>
+                @*Button to go the the previous image in the carousel*@
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                @*Button to go the the next image in the carousel*@
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+        </div>
+        }
+        @* Else we would just show the one image that is not in a carousel*@
+        else if(imageCount!=0)
+        {
+               <div class="d-print-none" id="oneImage">
+                  <img src="/media/@Model.MediaList.ElementAt(@imageLocation).MediaPath" alt="@Model.MediaList.ElementAt(@imageLocation).MediaPath" style="width: 350px; height: 350px; object-fit: contain;" />
+               </div>
+        }
+        
+        
+    <div id="culturalSignif" class="overflow-auto d-print-none">
+        <h3>Cultural Significance</h3>
+        @Html.DisplayFor(model => model.CulturalSignificance)
+    </div>
+
+    <div id="specimenDesc" class="overflow-auto d-print-none">
+        <h3>Description</h3>
+        @Html.DisplayFor(model => model.SpecimenDescription)
+    </div>
+
+    @if (bool.Parse(Environment.GetEnvironmentVariable("BYPASS_AUTHENTICATION") ?? "false") || User.Identity.IsAuthenticated)
+    {
+        @* QR Code Generation Code *@
+        // This code block will dynamically generate the QR Code based on the current page's URL
+
+        // Because of how Core MVC works, this is done in a slightly odd way
+        // Url.Action builds a url using the current context's request scheme
+        // (essentially, it should build the same URL that is in the URL bar when viewing this details page)
+        String stringToEncode = Url.Action("Details", "Specimen", new { id = @Model.SpecimenID }, protocol: Context.Request.Scheme);
+
+        // Uses the QrCoder Library to generate a QR Code using the given URL string and display it
+        QRCoder.QRCodeGenerator qrGenerator = new QRCoder.QRCodeGenerator();
+        QRCoder.QRCodeData qrData = qrGenerator.CreateQrCode(stringToEncode, QRCoder.QRCodeGenerator.ECCLevel.M);
+        QRCoder.BitmapByteQRCode qrCode = new QRCoder.BitmapByteQRCode(qrData);
+
+        // Converts it into a Bitmap that can be displayed in the img HTML tag
+        byte[] qrCodeBytes = qrCode.GetGraphic(10, "#000000", "#ffffff"); // Can add a little bit of colour here
+
+
+        @* QR Code display toggle *@
+        <div id="qrCollapseToggle" class="text-center mt-5 d-print-none">
+            <button id="qrCollapseBtn" class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#qrCollapse" aria-expanded="false" aria-controls="qrCollapse">
+                Show/Hide the QR code for this specimen
+            </button>
+        </div>
+
+        @* QR Code *@
+        <div class="collapse align-items-center justify-content-center d-print-flex" id="qrCollapse">
+            <div class="text-center mt-1" id="qrCodeDiv">
+                <img class="border" alt="@Model.EnglishName" src="@String.Format("data:image/png;base64,{0}", Convert.ToBase64String(qrCodeBytes))" />
+                <p class="d-print-none">@Model.EnglishName QR Code</p>
+                <h4 id="scanMe" class="d-none d-print-block">Scan me to learn more!</h4>
+            </div>
+            <div id="printBtnDiv" class="text-center d-print-none">
+                <button id="printBtn" class="btn btn-secondary print-btn">Print QR Code</button>
+                
+            </div>
+        </div>
+    }
+
+    
+
+    <div class="text-center d-print-none">
+    <a class="btn-link text-dark" href="/Feedback/Create?specid=@Model.SpecimenID" data-cy="feedback-link">Send feedback about this page</a>
+</div>
+</div>
+
+
+ <script>
+    $(document).ready(function () {
+        $('.print-btn').click(function () {
+            window.print();
+        })
+    });
+</script>
+
+

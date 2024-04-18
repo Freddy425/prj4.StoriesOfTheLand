@@ -1,0 +1,16 @@
+﻿
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+<div class="d-flex justify-content-center">
+    <div class="d-flex justify-content-center">
+        @foreach (var item in Model)
+        {
+            <div class="col-sm mx-auto p-2 justify-content-center">
+                <img src="/images/@item.SponsorImagePath" style="max-width: 130px; max-height: 100px;">
+            </div>
+        }
+    </div>
+</div>
+
+

@@ -1,0 +1,35 @@
+﻿@model StoriesOfTheLand.Models.Specimen
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+<div class="modal fade" id="deleteSpecimenModal" tabindex="-1" role="dialog" aria-labelledby="deleteSpecimenModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteSpecimenModalLabel">Confirm Deletion of Specimen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                You are trying to delete "@Model.EnglishName" specimen. Do you wish to continue?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form asp-action="Delete" asp-route-id="@Model.SpecimenID" method="post">
+                    <button type="submit" class="btn btn-danger">Delete Specimen</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.onload = function () {
+        // Attach click event to delete button
+        $('.btn-delete').click(function () {
+            var specimenId = $(this).data('specimen-id');
+            $('#deleteSpecimenModal form').attr('asp-route-id', specimenId);
+            var deleteSpecimenModal = new bootstrap.Modal(document.getElementById('deleteSpecimenModal'));
+            deleteSpecimenModal.show();
+        });
+    };
+</script>

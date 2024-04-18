@@ -1,0 +1,180 @@
+html {
+    font-size: 14px;
+    font-family: "Gotham Book",Arial,Helvetica;
+    background-color: #f9f9f9;
+}
+
+html, body {
+    font-family: "Gotham Book",Arial,Helvetica;
+    padding: 0;
+    margin: 0;
+    font-size: 16px;
+    box-sizing: border-box;
+    scroll-behavior: smooth
+}
+
+@font-face {
+    font-family: "Gotham Bold";
+    src: url('/css/Gotham Bold.otf') format('opentype');
+}
+
+@font-face {
+    font-family: "Gotham Book";
+    src: url('/css/Gotham Book.otf') format('opentype');
+}
+
+/* Define a CSS class to adjust column widths for smaller screens */
+@media screen and (max-width: 768px) {
+    .table-responsive table th,
+    .table-responsive table td {
+        padding: 0.5rem; /* Adjust padding for better spacing */
+        font-size: 0.8rem; /* Decrease font size for better readability */
+    }
+}
+
+
+
+@media (min-width: 768px) {
+    html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+    max-width: 1280px;
+    position: relative;
+    display: block;
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto 100px auto;
+    padding: 0 10px
+}
+
+.table-fixed {
+    width: 100%;
+    background-color: #f3f3f3;
+    
+    tbody{
+        height: 400px;
+        overflow-y: auto;
+        width: 100%;
+    }
+
+    thead, tbody {
+        display: block;
+    }
+
+}
+
+.btn-info {
+    background-color: #a6dde5;
+    border: 2px solid #a6dde5;
+   
+}
+
+
+
+
+footer {
+    border-top: solid;
+    border-color: #743c97; 
+    width: 100%;
+}
+
+
+h1 {
+    font-weight: 700;
+    font-family: "Gotham Bold",Arial,Helvetica;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 2rem;
+    line-height: 2.3rem;
+    color: #222
+}
+
+h2 {
+    font-family: "Gotham Bold",Arial,Helvetica;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 1.6rem;
+    line-height: 1.9rem;
+    color: #222
+}
+
+h3 {
+    font-family: "Gotham Bold",Arial,Helvetica;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 1.438rem;
+    line-height: 1.688rem;
+    color: #743c97
+}
+
+h4 {
+    font-family: "Gotham Bold",Arial,Helvetica;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 1.313rem;
+    line-height: 1.5rem;
+    color: #743c97
+}
+
+.navbar {
+    background-color: #743c97 !important;
+}
+
+.nav-link {
+    color: white !important;
+}
+
+.navbar-brand {
+    color: white !important;
+}
+
+
+@media print {
+    @page :header {
+        display: none
+    }
+
+    @page {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
+    #englishName {
+        font-family: "HCo Gotham SSm",Arial,Helvetica;
+        font-style: normal;
+        font-weight: 700;
+        font-size: 2rem;
+        line-height: 1.5rem;
+        color: #743c97;
+        padding: 10px
+    }
+    #creeName {
+        font-family: "HCo Gotham SSm",Arial,Helvetica;
+        font-style: normal;
+        font-weight: 700;
+        font-size: 1.75rem;
+        line-height: 1.5rem;
+    }
+
+
+
+}
+
+.discovered {
+    color: darkgreen;
+    font-weight: bold;
+    background-color: lightgreen;
+}

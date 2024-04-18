@@ -1,0 +1,25 @@
+﻿@model StoriesOfTheLand.Models.Resource
+
+@{
+    ViewData["Title"] = "Confirm Deletion of Resource";
+}
+
+<div class="modal fade" id="DeleteResourceModal" tabindex="-1" role="dialog" aria-labelledby="DeleteResourceModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteResourceModalLabel">Confirm Deletion of Resource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                You are trying to delete "@Model.ResourceTitle" resource. Do you wish to continue?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form asp-action="Delete" asp-route-id="@Model.ResourceID" method="post">
+                    <button type="submit" class="btn btn-danger">Delete Resource</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

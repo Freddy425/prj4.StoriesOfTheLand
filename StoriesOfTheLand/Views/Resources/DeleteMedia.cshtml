@@ -1,0 +1,27 @@
+﻿@model StoriesOfTheLand.Models.Resource
+
+@{
+    ViewData["Title"] = "Confirm Deletion of Image";
+}
+
+<div class="modal fade" id="DeleteMediaModal" tabindex="-1" role="dialog" aria-labelledby="DeleteMediaResourceModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="DeleteMediaResourceModalLabel">Confirm Deletion of Resource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                You are trying to delete the current image on the "@Model.ResourceTitle" resource.
+                The resource will display the default image if you perform this action
+                Do you wish to continue?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form asp-action="DeleteImage" asp-route-id="@Model.ResourceID" method="post">
+                    <button type="submit" class="btn btn-danger">Delete Image</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

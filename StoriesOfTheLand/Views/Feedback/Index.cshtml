@@ -1,0 +1,176 @@
+﻿@*
+@model IEnumerable<StoriesOfTheLand.Models.Feedback>
+*@
+@model IEnumerable<dynamic>
+
+@{
+    ViewData["Title"] = "Index";
+}
+@*headings for items in feeback*@
+<h1>Feedback</h1>
+@*if the page gets to a certain size remove heading to look better for mobile*@
+<div class="d-none d-lg-block">
+    <h3 style="display: inline-block; margin-left: 40px; width: 8%;">
+        Date
+    </h3>
+    <h3 style="display: inline-block; width: 12%;">
+        Specimen
+    </h3>
+    <h3 style="display: inline-block; width: 8%;">
+        Name
+    </h3>
+    <h3 style="display: inline-block; width: 28%;">
+        Subject
+    </h3>
+</div>
+
+@foreach (var feedback in Model)
+{
+    <div class="accordion" id="accordionExample">
+        <div class="accordion-item">
+            <h2 class="accordion-header d-flex justify-content-between align-items-center" id="heading@(feedback.FeedbackID)">
+                <Button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@(feedback.FeedbackID)" aria-expanded="false" aria-controls="collapse@(feedback.FeedbackID)">
+                    <div class="d-none d-lg-block" style="width: 15%;">
+                        @feedback.CreateDate.ToString("MMM-dd-yyyy")
+                    </div>
+                    @*if there is no speicmenID we will just have a placeholder*@
+                    @if (feedback.SpecimenID == null)
+                    {
+                        <div style="width: 15%;">
+                            null
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="width: 15%;">
+                            @feedback.SpecimenEnglishName
+                        </div>
+                    }
+                    <div class="d-none d-lg-block" style="width: 12%;">
+                        @feedback.Name
+                    </div>
+                    <div style="width: 70%;">
+                        @feedback.Subject
+                    </div>
+                </Button>
+                <div class="d-flex">
+                    <div class="d-flex">
+                        <button class="btn btn-primary mt-2 me-2" onclick="openEmailClient('@feedback.Email', '@feedback.Subject')">Respond</button>
+                        <button type="submit" class="btn btn-danger mt-2 me-2" data-bs-toggle="modal" data-bs-target="@("#deleteModal" + @feedback.FeedbackID)">Delete</button>
+                    </div>
+                    <div class="modal fade" id="@("deleteModal"+@feedback.FeedbackID)" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="myModalLabel">Delete Feedback</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <h5>Are you sure you would like to delete this feedback?</h5>
+                                    <form asp-action="Delete">
+                                        <input type="hidden" name="id" value="@feedback.FeedbackID" />
+                                        <button type="submit" class="btn btn-danger mt-2 me-2" data-feedback-id="@feedback.FeedbackID">Delete</button>
+                                        <button id="cancel" type="button" class="btn btn-secondary mt-2 me-2" data-bs-dismiss="modal">Cancel</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </h2>
+            <div id="collapse@(feedback.FeedbackID)" class="accordion-collapse collapse" aria-labelledby="heading@(feedback.FeedbackID)" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <strong>Email:</strong> @feedback.Email <br />
+                    <strong>Details:</strong> @feedback.Details <br />
+                    <form id="feedbackForm" asp-action="UpdateStatus" method="post" style="width: 20%; display: inline-block;">
+                        <select name="status" class="form-control status-dropdown" data-feedback-id="@feedback.FeedbackID">
+                            @foreach (var status in Enum.GetValues(typeof(Status)))
+                            {
+                                if (feedback.Status == (Status)status)
+                                {
+                                    <option value="@((int)status)" selected>@status</option>
+                                }
+                                else
+                                {
+                                    <option value="@((int)status)">@status</option>
+                                }
+                            }
+                        </select>
+
+                        <input type="hidden" name="feedbackId" value="@feedback.FeedbackID" />
+                        <button type="submit" class="btn btn-primary mt-2" style="display: inline-block;">Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+<script>
+
+    window.addEventListener('scroll', function () {
+        //on scroll will store the currnt scrollY position to the localstorage
+        localStorage.setItem('scrollPosition', window.scrollY);
+    });
+
+    window.addEventListener('load', function () {
+        //on load we will get 'scrollPosition' that was saved
+        var scrollPosition = localStorage.getItem('scrollPosition');
+        if (scrollPosition !== null) {
+            //if scroll is not null we will set scroll to 'scrollPosition'
+            window.scrollTo(0, parseInt(scrollPosition));
+        }
+    });
+
+
+    // Function to save accordion state to local storage
+    function saveAccordionState(accordionId, isExpanded) {
+        //saves the accordianID and if it was expanded or not
+        localStorage.setItem(accordionId, isExpanded);
+    }
+
+    // Function to retrieve accordion state from local storage and expand/collapse accordingly
+    function restoreAccordionState() {
+        //gets all the accordian-collapse on the page
+        var accordions = document.querySelectorAll('.accordion-collapse');
+        //for each accordian
+        accordions.forEach(function (accordion) {
+            //get its id (which is the feedbackID)
+            var accordionId = accordion.getAttribute('id');
+            //sets a varible for isExpanded if the localstorage says its true
+            var isExpanded = localStorage.getItem(accordionId) === 'true';
+            //if it is true we will set that accordian to show
+            if (isExpanded) {
+                accordion.classList.add('show');
+            }
+        });
+    }
+
+    // Add event listener to save accordion state when toggled
+    document.querySelectorAll('.accordion-button').forEach(function (button) {
+        //event listener for when a accoridan button is clicked
+        button.addEventListener('click', function () {
+            var accordionId = button.getAttribute('data-bs-target').slice(1);
+            var isExpanded = button.getAttribute('aria-expanded') === 'true';
+            saveAccordionState(accordionId, isExpanded);
+        });
+    });
+
+    // Call restoreAccordionState function when the page is loaded
+    document.addEventListener('DOMContentLoaded', function () {
+        restoreAccordionState();
+    });
+</script>
+
+<script>
+    function openEmailClient(emailAddress, subject) {
+        // Construct the mailto URI
+        var mailtoLink = "mailto:" + encodeURIComponent(emailAddress) + "?subject=" + encodeURIComponent(subject);
+
+        // Open the default email client
+        window.location.href = mailtoLink;
+    }
+</script>

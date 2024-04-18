@@ -1,0 +1,50 @@
+﻿@model List<StoriesOfTheLand.Models.Specimen>;
+@using Microsoft.AspNetCore.Authorization;
+@{
+    ViewData["Title"] = "All Specimens";
+}
+
+@if (Model != null)
+{
+    <div id="printBtnDiv" class="text-center d-print-none">
+        <button id="printBtn" class="btn btn-secondary print-btn">Print All QR Codes</button>
+    </div>
+    @foreach (var specimen in Model)
+    {
+        //for each specimen it will add the details page
+        @await Html.PartialAsync("Details", specimen)   
+
+        //footer section
+        <footer>
+            <div id="footer" class="container">
+                @await Component.InvokeAsync("Footer")
+            </div>
+        </footer>
+        //div to break up the pages so each qr code gets its own page
+        <div style="break-after:page"></div>
+
+    }
+}
+else //if there are not specimen there will be a messages displaying so
+{
+    <h1>No Specimen to print</h1>
+}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        $('.specimen').each(function () {
+            $(this).find('button').hide(); // Hide individual QR code generation buttons
+        });
+         //this will redirect back to portal page when the print window is closed
+         window.onafterprint = function () {
+             window.location.href = "/Admin/Portal"; 
+         };
+    }, false);
+    //this method gets called when the "Print All QR Codes" button is pressed
+    //which will call print on the current page
+    $(document).ready(function () {
+        $('.print-btn').click(function () {
+            window.print();
+        })
+    });
+</script>

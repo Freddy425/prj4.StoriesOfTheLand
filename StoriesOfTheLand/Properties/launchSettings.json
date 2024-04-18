@@ -1,0 +1,71 @@
+{
+  "profiles": {
+    "httpNoData": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Coding",
+        "DEEPL_KEY": "b6b560e2-0f47-4038-afa9-8250bf80f4f1:fx"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5044"
+    },
+    "httpSeedData": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DEEPL_KEY": "b6b560e2-0f47-4038-afa9-8250bf80f4f1:fx"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5044"
+    },
+    "httpsSeedData": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DEEPL_KEY": "b6b560e2-0f47-4038-afa9-8250bf80f4f1:fx"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://localhost:7202;http://localhost:5044"
+    },
+    "httpsSeedDataNoAuth": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "BYPASS_AUTHENTICATION": "true",
+        "DEEPL_KEY": "b6b560e2-0f47-4038-afa9-8250bf80f4f1:fx"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://localhost:7202;http://localhost:5044"
+    },
+    "httpsApiFail": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "BYPASS_AUTHENTICATION": "true",
+        "DEEPL_KEY": "no-valid-image"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://localhost:7202;http://localhost:5044"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchBrowser": true,
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "publishAllPorts": true,
+      "useSSL": true
+    }
+  },
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:18119",
+      "sslPort": 44311
+    }
+  }
+}

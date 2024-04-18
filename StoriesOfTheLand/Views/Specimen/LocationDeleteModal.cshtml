@@ -1,0 +1,40 @@
+﻿@model StoriesOfTheLand.Models.Specimen
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+
+<div class="modal fade" id="locationDeleteModal" tabindex="-1" role="dialog" aria-labelledby="locationDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="locationEditModalLabel">Delete Specimen Location</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                You are trying to delete the locations for "@Model.EnglishName" specimen. Do you wish to continue?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form asp-action="DeleteLocation" asp-route-id="@Model.SpecimenID" method="post">
+                    <input type="hidden" asp-for="SpecimenID" />
+                    <button type="submit" class="btn btn-danger">Delete Specimen Location</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    window.onload = function () {
+        // Attach click event to delete button
+        $('.btn-delete').click(function () {
+            var specimenId = $(this).data('specimen-id');
+            $('#locationDeleteModal form').attr('asp-route-id', specimenId);
+            var locationDeleteModal = new bootstrap.Modal(document.getElementById('locationDeleteModal'));
+            locationDeleteModal.show();
+        });
+    };
+</script>
